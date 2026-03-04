@@ -16,7 +16,7 @@ define('IS_PRODUCTION', APP_ENV === 'production');
 
 // ── Database ────────────────────────���───────────────────────
 // TCP connection in both environments — identical behaviour.
-define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
 define('DB_NAME', getenv('DB_NAME') ?: 'pet_insurance');
 define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') ?: '');
