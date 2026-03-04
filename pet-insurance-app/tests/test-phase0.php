@@ -62,18 +62,20 @@ test('GCP_PROCESSOR_MAP is populated', function () {
     return is_array(GCP_PROCESSOR_MAP) && count(GCP_PROCESSOR_MAP) === 4;
 });
 
-// ── 2. Database ────────────────────────────��────────────────
+// ── 2. Database ─────────────────────────────────────────────
 echo "\n── Database ──\n";
 
+// Load database.php at file scope so $db is set globally
+require_once __DIR__ . '/../config/database.php';
+
 test('database.php connects', function () {
-    require_once __DIR__ . '/../config/database.php';
     global $db;
     return ($db instanceof PDO);
 });
 
 test('users table exists', function () {
     global $db;
-    if ($db === null) return false;  // ← fails instead of crashing
+    if ($db === null) return false;
     $stmt = $db->query("SHOW TABLES LIKE 'users'");
     return $stmt->rowCount() === 1;
 });
@@ -83,7 +85,7 @@ test('insurance_plans table has seed data', function () {
     if ($db === null) return false;
     $stmt = $db->query("SELECT COUNT(*) AS cnt FROM insurance_plans");
     $row  = $stmt->fetch();
-    return (int) $row['cnt'] === 3; // Basic, Premium, Ultimate
+    return (int) $row['cnt'] === 3;
 });
 
 test('vet_clinics table has seed data', function () {
@@ -110,7 +112,6 @@ test('All 8 tables exist', function () {
     }
     return true;
 });
-
 // ── 3. Sanitization ─────────────────────────────────────────
 echo "\n── Sanitization ──\n";
 
