@@ -13,6 +13,8 @@
  *   ✅ Factory returns mock scanner in mock mode
  */
 
+ob_start();
+session_start();
 echo "==========================================\n";
 echo "  Phase 0 Verification Test\n";
 echo "==========================================\n\n";
@@ -76,6 +78,7 @@ test('users table exists', function () {
 
 test('insurance_plans table has seed data', function () {
     global $db;
+    if ($db === null) return false;
     $stmt = $db->query("SELECT COUNT(*) AS cnt FROM insurance_plans");
     $row  = $stmt->fetch();
     return (int) $row['cnt'] === 3; // Basic, Premium, Ultimate
@@ -83,6 +86,7 @@ test('insurance_plans table has seed data', function () {
 
 test('vet_clinics table has seed data', function () {
     global $db;
+    if ($db === null) return false;
     $stmt = $db->query("SELECT COUNT(*) AS cnt FROM vet_clinics");
     $row  = $stmt->fetch();
     return (int) $row['cnt'] >= 10;
@@ -90,6 +94,7 @@ test('vet_clinics table has seed data', function () {
 
 test('All 8 tables exist', function () {
     global $db;
+    if ($db === null) return false;
     $expected = [
         'users', 'pets', 'insurance_plans', 'subscriptions',
         'vet_clinics', 'claims', 'claim_documents', 'quotes', 'audit_log',
@@ -164,10 +169,7 @@ echo "\n── CSRF ──\n";
 
 require_once __DIR__ . '/../includes/csrf.php';
 
-// Simulate a session for testing
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+
 $_SESSION = []; // Reset session
 
 test('generateCsrfToken() creates a token', function () {

@@ -23,7 +23,7 @@ class AIScannerFactory
      *
      * @return AIScannerMock|AIScanner
      */
-    public static function create(): AIScannerMock|object
+    public static function create(): object
     {
         if (AI_SCANNER_MODE === 'live') {
             // Only require the real AIScanner when actually needed
