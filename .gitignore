@@ -1,0 +1,44 @@
+# Pet Insurance App - .gitignore
+
+# -- Dependencies --
+/vendor/
+
+# -- GCP credentials (CRITICAL — never commit) --
+config/gcp-credentials.json
+
+# -- Uploaded files (user data, not code) --
+/uploads/*
+!/uploads/.htaccess
+
+# -- Environment / secrets --
+.env
+*.env
+*.env.*
+
+# -- Logs --
+*.log
+/logs/
+
+# -- IDE / Editor --
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# -- OS junk --
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# -- PHP --
+*.cache
+*.php~
+
+# -- Composer --
+composer.phar
+
+# -- Testing artifacts --
+/tests/fixtures/results/
+/tests/coverage/

@@ -1,0 +1,51 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "PHP: Listen for Xdebug",
+            "type": "php",
+            "request": "launch",
+            "port": 9003,
+            "pathMappings": {
+                "${workspaceFolder}": "${workspaceFolder}"
+            },
+            "log": false,
+            "xdebugSettings": {
+                "max_data": 512,
+                "max_children": 128,
+                "max_depth": 3
+            }
+        },
+        {
+            "name": "PHP: Built-in Server (localhost:8000)",
+            "type": "php",
+            "request": "launch",
+            "runtimeArgs": [
+                "-S", "localhost:8000",
+                "-t", "${workspaceFolder}"
+            ],
+            "port": 9003,
+            "serverReadyAction": {
+                "pattern": "Development Server .+ started",
+                "uriFormat": "http://localhost:8000",
+                "action": "openExternally"
+            }
+        },
+        {
+            "name": "PHP: Test Mock Scanner (CLI)",
+            "type": "php",
+            "request": "launch",
+            "program": "${workspaceFolder}/tests/test-mock-scanner.php",
+            "cwd": "${workspaceFolder}",
+            "port": 9003
+        },
+        {
+            "name": "PHP: Test Current File",
+            "type": "php",
+            "request": "launch",
+            "program": "${file}",
+            "cwd": "${workspaceFolder}",
+            "port": 9003
+        }
+    ]
+}
