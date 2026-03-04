@@ -69,6 +69,7 @@ test('database.php connects', function () {
 
 test('users table exists', function () {
     global $db;
+    if ($db === null) return false;  // ← fails instead of crashing
     $stmt = $db->query("SHOW TABLES LIKE 'users'");
     return $stmt->rowCount() === 1;
 });

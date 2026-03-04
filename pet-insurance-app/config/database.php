@@ -12,6 +12,7 @@
  */
 
 require_once __DIR__ . '/constants.php';
+$db = null;
 
 try {
     $dsn = sprintf(
@@ -32,8 +33,11 @@ try {
     ]);
 
 } catch (PDOException $e) {
-    // Log the real error, show generic message to user
     error_log('Database connection failed: ' . $e->getMessage());
-    http_response_code(500);
-    die('A database error occurred. Please try again later.');
+    $db = null;
+    // Only halt for web requests, not CLI (test runner)
+    if (php_sapi_name() !== 'cli') {
+        http_response_code(500);
+        die('A database error occurred. Please try again later.');
+    }
 }

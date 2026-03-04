@@ -1,117 +1,91 @@
 <?php
 /**
- * Input sanitization & output escaping helpers.
+ * CSRF (Cross-Site Request Forgery) protection.
  *
- * RULES FOR THE TEAM:
- *   1. EVERY user input goes through inputString() or inputInt() before use.
- *   2. EVERY variable echoed into HTML goes through esc().
- *   3. NO exceptions. Ever.
+ * HOW IT WORKS:
+ *   1. A unique token is generated per session.
+ *   2. Every HTML form includes the token as a hidden field.
+ *   3. Every POST handler validates the token before processing.
+ *   4. If the token doesn't match, the request is rejected.
  *
- * Usage:
- *   require_once __DIR__ . '/../includes/sanitize.php';
+ * USAGE IN FORMS (Member B — just copy this into every <form>):
  *
- *   // Reading input
- *   $email = inputString('email');          // from $_POST
- *   $page  = inputInt('page', 'GET');       // from $_GET
+ *   <form method="POST" action="...">
+ *       <?php csrfField(); ?>
+ *       <!-- rest of form -->
+ *   </form>
  *
- *   // Output in HTML
- *   echo '<p>Hello, ' . esc($firstName) . '</p>';
+ * USAGE IN POST HANDLERS (Member A — call this at the top):
+ *
+ *   require_once __DIR__ . '/../includes/csrf.php';
+ *   requireValidCsrf();  // Exits with 403 if invalid
+ *
+ * USAGE IN AJAX (file-upload.js reads the meta tag):
+ *
+ *   <meta name="csrf-token" content="<?php echo esc(generateCsrfToken()); ?>">
  */
 
 /**
- * Escape a string for safe HTML output.
- * Prevents XSS by converting special characters to HTML entities.
+ * Generate (or retrieve) the CSRF token for the current session.
+ * Creates a new token if one doesn't exist yet.
  *
- * @param  string|null $value  The raw value to escape.
- * @return string              HTML-safe string.
+ * @return string  The 64-character hex token.
  */
-function esc(?string $value): string
+function generateCsrfToken(): string
 {
-    if ($value === null) {
-        return '';
+    // Ensure session is started
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
     }
-    return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+
+    return $_SESSION['csrf_token'];
 }
 
 /**
- * Get a sanitized string from user input ($_POST or $_GET).
- * Strips HTML tags and trims whitespace.
+ * Validate a CSRF token against the session token.
+ * Uses hash_equals() to prevent timing attacks.
  *
- * @param  string $key     The form field name.
- * @param  string $method  'POST' (default) or 'GET'.
- * @return string|null     Sanitized string, or null if not present.
+ * @param  string $token  The token submitted by the user.
+ * @return bool           True if valid, false otherwise.
  */
-function inputString(string $key, string $method = 'POST'): ?string
+function validateCsrfToken(string $token): bool
 {
-    $source = ($method === 'GET') ? $_GET : $_POST;
-
-    if (!isset($source[$key]) || $source[$key] === '') {
-        return null;
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
     }
 
-    // Strip tags, trim whitespace
-    $value = trim(strip_tags($source[$key]));
+    if (empty($_SESSION['csrf_token'])) {
+        return false;
+    }
 
-    // Return null for empty-after-cleaning strings
-    return ($value !== '') ? $value : null;
+    return hash_equals($_SESSION['csrf_token'], $token);
 }
 
 /**
- * Get a validated integer from user input.
- *
- * @param  string $key     The form field name.
- * @param  string $method  'POST' (default) or 'GET'.
- * @return int|null        Validated integer, or null if not present/invalid.
+ * Output a hidden form field containing the CSRF token.
+ * Call this inside every <form> tag.
  */
-function inputInt(string $key, string $method = 'POST'): ?int
+function csrfField(): void
 {
-    $source = ($method === 'GET') ? $_GET : $_POST;
-
-    if (!isset($source[$key])) {
-        return null;
-    }
-
-    $filtered = filter_var($source[$key], FILTER_VALIDATE_INT);
-
-    return ($filtered !== false) ? $filtered : null;
+    $token = generateCsrfToken();
+    echo '<input type="hidden" name="csrf_token" value="' . esc($token) . '">';
 }
 
 /**
- * Get a validated email from user input.
- *
- * @param  string $key     The form field name.
- * @param  string $method  'POST' (default) or 'GET'.
- * @return string|null     Valid email, or null if invalid/not present.
+ * Require a valid CSRF token on the current request.
+ * Call this at the top of any POST handler.
+ * Sends a 403 Forbidden response and exits if the token is invalid.
  */
-function inputEmail(string $key, string $method = 'POST'): ?string
+function requireValidCsrf(): void
 {
-    $source = ($method === 'GET') ? $_GET : $_POST;
+    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
 
-    if (!isset($source[$key])) {
-        return null;
+    if (!validateCsrfToken($token)) {
+        http_response_code(403);
+        die('Invalid or missing CSRF token. Please refresh the page and try again.');
     }
-
-    $filtered = filter_var(trim($source[$key]), FILTER_VALIDATE_EMAIL);
-
-    return ($filtered !== false) ? $filtered : null;
-}
-
-/**
- * Get a sanitized float from user input (for monetary values).
- *
- * @param  string $key     The form field name.
- * @param  string $method  'POST' (default) or 'GET'.
- * @return float|null      Validated float, or null if not present/invalid.
- */
-function inputFloat(string $key, string $method = 'POST'): ?float
-{
-    $source = ($method === 'GET') ? $_GET : $_POST;
-
-    if (!isset($source[$key])) {
-        return null;
-    }
-
-    $filtered = filter_var($source[$key], FILTER_VALIDATE_FLOAT);
-
-    return ($filtered !== false) ? $filtered : null;
 }
