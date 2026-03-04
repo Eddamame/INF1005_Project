@@ -66,7 +66,7 @@ test('GCP_PROCESSOR_MAP is populated', function () {
 echo "\n── Database ──\n";
 
 // Load database.php at file scope so $db is set globally
-require_once __DIR__ . '/../config/database.php';
+require __DIR__ . '/../config/database.php';
 
 test('database.php connects', function () {
     global $db;
