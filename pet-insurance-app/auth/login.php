@@ -28,6 +28,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $lockoutSeconds = 300; // 5 minutes
     $maxAttempts    = 5;
 
+    // Hi JK added this to reset lockout if the timer has expired
+    if ($_SESSION['login_attempts'] >= $maxAttempts &&
+        (time() - $_SESSION['login_last_attempt']) >= $lockoutSeconds) {
+        $_SESSION['login_attempts'] = 0;
+    }
+
     if ($_SESSION['login_attempts'] >= $maxAttempts &&
         (time() - $_SESSION['login_last_attempt']) < $lockoutSeconds) {
         $wait = $lockoutSeconds - (time() - $_SESSION['login_last_attempt']);

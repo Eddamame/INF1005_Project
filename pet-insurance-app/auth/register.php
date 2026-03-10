@@ -30,12 +30,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$lastName)  $errors['last_name']  = 'Last name is required.';
     if (!$email)     $errors['email']      = 'A valid email address is required.';
 
+    // Hi Jk just added this to aggregate all the errors so the user doesn't have to submit multiple times to see them all
+    $passwordErrors = [];
     if (strlen($password) < 8) {
-        $errors['password'] = 'Password must be at least 8 characters.';
-    } elseif (!preg_match('/[A-Z]/', $password)) {
-        $errors['password'] = 'Password must contain at least one uppercase letter.';
-    } elseif (!preg_match('/[0-9]/', $password)) {
-        $errors['password'] = 'Password must contain at least one number.';
+        $passwordErrors[] = 'at least 8 characters';
+    }
+    if (!preg_match('/[A-Z]/', $password)) {
+        $passwordErrors[] = 'at least one uppercase letter';
+    }
+    if (!preg_match('/[0-9]/', $password)) {
+        $passwordErrors[] = 'at least one number';
+    }
+    if ($passwordErrors) {
+        $errors['password'] = 'Password must contain: ' . implode(', ', $passwordErrors) . '.';
     }
 
     if ($password !== $confirm) {
