@@ -34,4 +34,6 @@ if (session_status() === PHP_SESSION_NONE) {
 
     // Set a meaningful session name (helps with debugging multiple projects)
     session_name('PET_INSURANCE_SID');
+
+    session_start();
 }

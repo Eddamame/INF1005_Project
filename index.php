@@ -11,7 +11,6 @@
 
 require_once __DIR__ . '/pet-insurance-app/config/constants.php';
 require_once __DIR__ . '/pet-insurance-app/config/session.php';
-session_start();
 
 require_once __DIR__ . '/pet-insurance-app/includes/sanitize.php';
 require_once __DIR__ . '/pet-insurance-app/includes/csrf.php';
@@ -25,6 +24,7 @@ require_once __DIR__ . '/pet-insurance-app/includes/csrf.php';
     <title>PawShield — Pet Insurance Made Simple</title>
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 </head>
 <body>
 

@@ -14,7 +14,7 @@
  */
 function requireLogin(): void {
     if (empty($_SESSION['user_id'])) {
-        header('Location: ../auth/login.php');
+        header('Location: /pet-insurance-app/auth/login.php');
         exit;
     }
 }

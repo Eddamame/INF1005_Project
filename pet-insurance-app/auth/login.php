@@ -67,6 +67,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 </head>
 <body class="bg-light">
+
+<!-- ── Navbar ──────────────────────────────────────────────── -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/index.php">🐾 PawShield</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/index.php">Home</a>
+                </li>
+                <?php if (!empty($_SESSION['user_id'])): ?>
+                <li class="nav-item">
+                    <a class="nav-link" href="/../dashboard/my-pets.php">My Pets</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/../dashboard/profile.php">Profile</a>
+                </li>
+                <?php if (($_SESSION['user_role'] ?? '') === 'admin'): ?>
+                <li class="nav-item">
+                    <a class="nav-link text-warning" href="/admin/index.php">Admin</a>
+                </li>
+                <?php endif; ?>
+                <?php endif; ?>
+            </ul>
+
+            <ul class="navbar-nav ms-auto">
+                <?php if (!empty($_SESSION['user_id'])): ?>
+                <li class="nav-item">
+                    <span class="nav-link text-light">
+                        👋 <?= htmlspecialchars($_SESSION['user_name'] ?? 'User', ENT_QUOTES, 'UTF-8') ?>
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link btn btn-outline-light btn-sm px-3 ms-2"
+                       href="/pet-insurance-app/auth/logout.php">Log Out</a>
+                </li>
+                <?php else: ?>
+                <li class="nav-item">
+                    <a class="nav-link" href="/pet-insurance-app/auth/login.php">Log In</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link btn btn-primary btn-sm px-3 ms-2 text-white"
+                       href="/pet-insurance-app/auth/register.php">Register</a>
+                </li>
+                <?php endif; ?>
+            </ul>
+        </div>
+    </div>
+</nav>
+
 <div class="container py-5" style="max-width:440px">
     <h2 class="mb-4">Log In</h2>
 
