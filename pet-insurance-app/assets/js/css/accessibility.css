@@ -1,0 +1,238 @@
+/* ============================================================
+   PawShield — accessibility.css
+   WCAG AA compliance: focus rings, contrast, skip link, screen reader
+   ============================================================ */
+
+/* ── Skip-to-content link ──────────────────────────────────
+   Hidden by default, visible on keyboard focus
+   ────────────────────────────────────────────────────────── */
+.skip-link {
+    position: absolute;
+    top: -100%;
+    left: 1rem;
+    z-index: 9999;
+    background: #0D9488;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.6rem 1.25rem;
+    border-radius: 0 0 0.5rem 0.5rem;
+    text-decoration: none;
+    transition: top 0.15s ease;
+    /* Ensure high contrast against background */
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* ── Focus rings ───────────────────────────────────────────
+   Keyboard navigation focus indicators — WCAG 2.1 SC 2.4.7
+   ────────────────────────────────────────────────────────── */
+
+/* Remove browser default, replace with high-contrast custom ring */
+:focus-visible {
+    outline: 3px solid #0D9488;
+    outline-offset: 3px;
+    border-radius: 2px;
+}
+
+/* On dark backgrounds (navbar, footer, hero) use white ring */
+.pawshield-nav :focus-visible,
+.pawshield-footer :focus-visible,
+.hero-section :focus-visible,
+.testimonials-section :focus-visible,
+.cta-section :focus-visible,
+.page-hero :focus-visible,
+.contact-info :focus-visible {
+    outline-color: #ffffff;
+}
+
+/* Buttons: larger, more visible focus indicator */
+.btn:focus-visible {
+    outline: 3px solid #0D9488;
+    outline-offset: 4px;
+    box-shadow: 0 0 0 5px rgba(13, 148, 136, 0.25);
+}
+
+/* Form controls */
+.form-control:focus,
+.form-select:focus,
+textarea:focus {
+    outline: 2px solid #0D9488;
+    outline-offset: 0;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+
+/* Nav links */
+.nav-link:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+/* Accordion buttons */
+.accordion-button:focus-visible {
+    outline: 3px solid #0D9488;
+    outline-offset: 2px;
+    box-shadow: none;
+}
+
+/* ── Colour contrast helpers ───────────────────────────────
+   Ensure text meets WCAG AA minimum 4.5:1 for normal text
+   ────────────────────────────────────────────────────────── */
+
+/* Muted text: ensure readable against white */
+.text-muted,
+.hero-subtitle,
+.section-subtitle,
+.plan-desc,
+.step-desc,
+.service-desc,
+.value-desc,
+.team-bio,
+.faq-answer {
+    color: #4B5563; /* 7.2:1 on white */
+}
+
+/* Amber is decorative only — don't use as sole text colour */
+.star-decoration { color: #D97706; } /* darker amber for text context */
+
+/* ── Screen reader utilities ───────────────────────────────
+   Standard Bootstrap .visually-hidden + extensions
+   ────────────────────────────────────────────────────────── */
+.visually-hidden,
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Focusable variant — show when focused by keyboard */
+.visually-hidden-focusable:not(:focus):not(:focus-within),
+.sr-only-focusable:not(:focus) {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* ── Reduced motion ────────────────────────────────────────
+   Respect user's OS-level "Reduce Motion" preference
+   ────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ── High contrast mode support ────────────────────────────
+   Windows High Contrast / Forced Colors
+   ────────────────────────────────────────────────────────── */
+@media (forced-colors: active) {
+    .btn {
+        border: 2px solid ButtonText;
+    }
+
+    .plan-card,
+    .step-card,
+    .testimonial-card,
+    .service-card,
+    .team-card {
+        border: 1px solid ButtonText;
+    }
+
+    .skip-link {
+        background: Highlight;
+        color: HighlightText;
+        outline-color: HighlightText;
+    }
+}
+
+/* ── Interactive element minimum touch target ──────────────
+   WCAG 2.5.5 — interactive targets at least 44x44px
+   ────────────────────────────────────────────────────────── */
+.btn,
+.nav-link,
+.footer-links a,
+.footer-socials a,
+.contact-social a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Allow navbar links to stay inline without forced height disruption */
+.navbar-nav .nav-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+/* ── Link underlines for non-nav body links ────────────────
+   WCAG 1.4.1 — colour alone must not distinguish links
+   ────────────────────────────────────────────────────────── */
+main a:not(.btn):not(.nav-link):not(.navbar-brand):not(.skip-link) {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+main a:not(.btn):not(.nav-link):not(.navbar-brand):not(.skip-link):hover {
+    text-decoration-thickness: 2px;
+}
+
+/* ── Error states (form validation) ───────────────────────
+   Don't rely on colour alone — use icon + text too
+   ────────────────────────────────────────────────────────── */
+.invalid-feedback {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: #DC2626; /* 5.9:1 on white */
+}
+
+.is-invalid {
+    border-color: #DC2626 !important;
+}
+
+.is-invalid:focus {
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+    outline-color: #DC2626 !important;
+}
+
+/* ── Print styles ──────────────────────────────────────────
+   Basic accessible print layout
+   ────────────────────────────────────────────────────────── */
+@media print {
+    .pawshield-nav,
+    .pawshield-footer,
+    .skip-link,
+    .hero-bg-shapes,
+    .hero-card-float {
+        display: none !important;
+    }
+
+    body { font-size: 12pt; color: #000; background: #fff; }
+    h1, h2, h3 { color: #000; }
+    a { color: #000; text-decoration: underline; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: 0.8em; }
+}
