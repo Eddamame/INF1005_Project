@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_role'] = $user['role'];
             $_SESSION['user_name'] = $user['first_name'];
 
-            header('Location: /pet-insurance-app/dashboard/my-pets.php');
+            header('Location: /dashboard/my-pets.php');
             exit;
         } else {
             $_SESSION['login_attempts']++;

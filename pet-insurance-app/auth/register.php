@@ -4,6 +4,8 @@ require_once __DIR__ . '/../config/session.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/csrf.php';
 require_once __DIR__ . '/../includes/sanitize.php';
+require_once __DIR__ . '/middleware.php';
+isLoggedIn();
 
 $errors = [];
 $old = [];
@@ -78,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['user_role']  = 'customer';
         $_SESSION['user_name']  = $firstName;
 
-        header('Location: /pet-insurance-app/dashboard/my-pets.php');
+        header('Location: /dashboard/my-pets.php');
         exit;
     }
 }
