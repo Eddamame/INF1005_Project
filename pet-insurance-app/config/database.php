@@ -12,6 +12,7 @@
  */
 
 require_once __DIR__ . '/constants.php';
+/** @var PDO|null $db */
 $db = null;
 
 try {

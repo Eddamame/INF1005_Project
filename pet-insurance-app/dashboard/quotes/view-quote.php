@@ -62,7 +62,7 @@ try {
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="/index.php">🐾 PawShield</a>
+        <a class="navbar-brand fw-bold" href="<?= base_path() ?>/index.php">🐾 PawShield</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -70,7 +70,7 @@ try {
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="/pet-insurance-app/dashboard/my-pets.php">My Pets</a>
+                    <a class="nav-link" href="<?= base_path() ?>/dashboard/my-pets.php">My Pets</a>
                 </li>
             </ul>
             <ul class="navbar-nav ms-auto">
@@ -79,7 +79,7 @@ try {
                 </li>
                 <li class="nav-item">
                     <a class="nav-link btn btn-outline-light btn-sm px-3 ms-2"
-                       href="/pet-insurance-app/auth/logout.php">Log Out</a>
+                       href="<?= base_path() ?>/auth/logout.php">Log Out</a>
                 </li>
             </ul>
         </div>
@@ -106,7 +106,7 @@ try {
 
                         <dt class="col-sm-5">Claim</dt>
                         <dd class="col-sm-7">
-                            <a href="/pet-insurance-app/dashboard/claims/view-claim.php?id=<?= (int)$quote['claim_id'] ?>">
+                            <a href="<?= base_path() ?>/dashboard/claims/view-claim.php?id=<?= (int)$quote['claim_id'] ?>">
                                 <?= esc($quote['claim_ref']) ?>
                             </a>
                         </dd>
@@ -200,7 +200,7 @@ try {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/pet-insurance-app/assets/js/quote-dashboard.js"></script>
+<script src="<?= base_path() ?>/assets/js/quote-dashboard.js"></script>
 </body>
 </html>
 

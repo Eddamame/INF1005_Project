@@ -1,0 +1,4 @@
+# Custom error pages (404, 403, 500)
+ErrorDocument 404 404.php
+ErrorDocument 403 403.php
+ErrorDocument 500 500.php

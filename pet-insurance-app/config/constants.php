@@ -14,6 +14,20 @@
 define('APP_ENV',       getenv('APP_ENV') ?: 'local');
 define('IS_PRODUCTION', APP_ENV === 'production');
 
+// ── Base path (for subfolder installs, e.g. localhost/pet-insurance-app/) ─
+if (php_sapi_name() === 'cli') {
+    define('BASE_PATH', '');
+} else {
+    $script = $_SERVER['SCRIPT_NAME'] ?? '';
+    $parts = array_filter(explode('/', trim($script, '/')));
+    define('BASE_PATH', count($parts) > 1 ? '/' . $parts[0] : '');
+}
+
+/** Safe base path for HTML output (use in href/src). */
+function base_path() {
+    return htmlspecialchars(BASE_PATH, ENT_QUOTES, 'UTF-8');
+}
+
 // ── Database ────────────────────────���───────────────────────
 // TCP connection in both environments — identical behaviour.
 define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');

@@ -17,9 +17,7 @@ $pageTitle = $pageTitle ?? 'PawShield — Pet Insurance Made Simple';
     <?php endif; ?>
     <title><?php echo htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8'); ?></title>
 
-    <!-- Bootstrap 5 (local) -->
-    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
-    <!-- Bootstrap 5 (CDN fallback) -->
+    <!-- Bootstrap 5 (CDN) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -28,8 +26,8 @@ $pageTitle = $pageTitle ?? 'PawShield — Pet Insurance Made Simple';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <!-- Custom styles -->
-    <link rel="stylesheet" href="/assets/css/style.css">
-    <link rel="stylesheet" href="/assets/css/accessibility.css">
+    <link rel="stylesheet" href="<?= base_path() ?>/assets/css/style.css">
+    <link rel="stylesheet" href="<?= base_path() ?>/assets/css/accessibility.css">
 </head>
 <body>
 <!-- Skip to main content (WCAG) -->
