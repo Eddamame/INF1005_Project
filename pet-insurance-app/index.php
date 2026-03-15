@@ -15,6 +15,7 @@ require_once __DIR__ . '/config/session.php';
 require_once __DIR__ . '/includes/sanitize.php';
 require_once __DIR__ . '/includes/csrf.php';
 
+require_once 'config/database.php';
 $plans = [];
 if ($db instanceof PDO) {
     $stmt  = $db->query("SELECT * FROM insurance_plans WHERE is_active = 1 ORDER BY monthly_premium ASC LIMIT 3");
