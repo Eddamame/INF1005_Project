@@ -67,8 +67,8 @@ function dashBadge(string $status): string {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="/assets/css/style.css">
-    <link rel="stylesheet" href="/assets/css/accessibility.css">
+    <link rel="stylesheet" href="<?= base_path() ?>/assets/css/style.css">
+    <link rel="stylesheet" href="<?= base_path() ?>/assets/css/accessibility.css">
 </head>
 <body>
 
@@ -215,7 +215,7 @@ function dashBadge(string $status): string {
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Claims</h6>
-                    <a href="/admin/claims.php" class="btn btn-sm btn-outline-primary">View All</a>
+                    <a href="<?= base_path() ?>/admin/claims.php" class="btn btn-sm btn-outline-primary">View All</a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -255,7 +255,7 @@ function dashBadge(string $status): string {
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h6 class="mb-0"><i class="bi bi-activity me-2"></i>Recent Activity</h6>
-                    <a href="/admin/audit-log.php" class="btn btn-sm btn-outline-secondary">View All</a>
+                    <a href="<?= base_path() ?>/admin/audit-log.php" class="btn btn-sm btn-outline-secondary">View All</a>
                 </div>
                 <div class="card-body p-0">
                     <ul class="list-group list-group-flush">

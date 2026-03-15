@@ -80,7 +80,7 @@ if ($latestCompleted && !empty($latestCompleted['ai_parsed_data'])) {
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="/index.php">🐾 PawShield</a>
+        <a class="navbar-brand fw-bold" href="<?= base_path() ?>/index.php">🐾 PawShield</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -88,7 +88,7 @@ if ($latestCompleted && !empty($latestCompleted['ai_parsed_data'])) {
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="/pet-insurance-app/dashboard/my-pets.php">My Pets</a>
+                    <a class="nav-link" href="<?= base_path() ?>/dashboard/my-pets.php">My Pets</a>
                 </li>
             </ul>
             <ul class="navbar-nav ms-auto">
@@ -97,7 +97,7 @@ if ($latestCompleted && !empty($latestCompleted['ai_parsed_data'])) {
                 </li>
                 <li class="nav-item">
                     <a class="nav-link btn btn-outline-light btn-sm px-3 ms-2"
-                       href="/pet-insurance-app/auth/logout.php">Log Out</a>
+                       href="<?= base_path() ?>/auth/logout.php">Log Out</a>
                 </li>
             </ul>
         </div>
@@ -152,7 +152,7 @@ if ($latestCompleted && !empty($latestCompleted['ai_parsed_data'])) {
             <div class="card mb-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span>Uploaded Documents</span>
-                    <a href="/pet-insurance-app/dashboard/claims/new-claim.php" class="btn btn-sm btn-outline-primary">
+                    <a href="<?= base_path() ?>/dashboard/claims/new-claim.php" class="btn btn-sm btn-outline-primary">
                         + New Claim
                     </a>
                 </div>

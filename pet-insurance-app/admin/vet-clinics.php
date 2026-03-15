@@ -158,8 +158,8 @@ $clinics = $fetchStmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="/assets/css/style.css">
-    <link rel="stylesheet" href="/assets/css/accessibility.css">
+    <link rel="stylesheet" href="<?= base_path() ?>/assets/css/style.css">
+    <link rel="stylesheet" href="<?= base_path() ?>/assets/css/accessibility.css">
 </head>
 <body>
 
@@ -173,7 +173,7 @@ $clinics = $fetchStmt->fetchAll();
             <a href="?action=add" class="btn btn-success btn-sm me-2">
                 <i class="bi bi-plus-circle me-1"></i> Add Clinic
             </a>
-            <a href="/admin/index.php" class="btn btn-outline-secondary btn-sm">
+            <a href="<?= base_path() ?>/admin/index.php" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left me-1"></i> Back
             </a>
         </div>
@@ -232,7 +232,7 @@ $clinics = $fetchStmt->fetchAll();
                 </div>
                 <div class="mt-3">
                     <button class="btn btn-primary"><?= $editClinic ? 'Save Changes' : 'Add Clinic' ?></button>
-                    <a href="/admin/vet-clinics.php" class="btn btn-secondary ms-2">Cancel</a>
+                    <a href="<?= base_path() ?>/admin/vet-clinics.php" class="btn btn-secondary ms-2">Cancel</a>
                 </div>
             </form>
         </div>
@@ -246,7 +246,7 @@ $clinics = $fetchStmt->fetchAll();
                    value="<?= esc($search) ?>">
             <button class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
             <?php if ($search): ?>
-            <a href="/admin/vet-clinics.php" class="btn btn-outline-secondary">Clear</a>
+            <a href="<?= base_path() ?>/admin/vet-clinics.php" class="btn btn-outline-secondary">Clear</a>
             <?php endif; ?>
         </div>
     </form>

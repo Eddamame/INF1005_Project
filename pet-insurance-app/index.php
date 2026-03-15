@@ -45,8 +45,8 @@ if (empty($plans)) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <!-- PawShield custom CSS — root-relative paths, work from any page -->
-    <link rel="stylesheet" href="/assets/css/style.css">
-    <link rel="stylesheet" href="/assets/css/accessibility.css">
+    <link rel="stylesheet" href="<?= base_path() ?>/assets/css/style.css">
+    <link rel="stylesheet" href="<?= base_path() ?>/assets/css/accessibility.css">
 </head>
 <body>
 
@@ -80,11 +80,11 @@ if (empty($plans)) {
                         claim quote — no paperwork, no waiting, no stress.
                     </p>
                     <div class="hero-actions">
-                        <a href="/auth/register.php" class="btn btn-hero-primary">
+                        <a href="<?= base_path() ?>/auth/register.php" class="btn btn-hero-primary">
                             Protect My Pet
                             <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
                         </a>
-                        <a href="/pages/how-it-works.php" class="btn btn-hero-secondary">
+                        <a href="<?= base_path() ?>/pages/how-it-works.php" class="btn btn-hero-secondary">
                             See How It Works
                         </a>
                     </div>
@@ -187,7 +187,7 @@ if (empty($plans)) {
                             <li><i class="bi bi-check-circle-fill text-success"></i> $<?php echo number_format((float)$plan['deductible']); ?> deductible</li>
                             <li><i class="bi bi-check-circle-fill text-success"></i> Instant AI claim quotes</li>
                         </ul>
-                        <a href="/auth/register.php"
+                        <a href="<?= base_path() ?>/auth/register.php"
                            class="btn <?php echo $featured ? 'btn-primary' : 'btn-outline-primary'; ?> w-100 mt-3">
                             Choose <?php echo htmlspecialchars($plan['name'], ENT_QUOTES, 'UTF-8'); ?>
                         </a>
@@ -196,7 +196,7 @@ if (empty($plans)) {
                 <?php endforeach; ?>
             </div>
             <div class="text-center mt-4">
-                <a href="/pages/pricing.php" class="link-muted">Compare all features in detail →</a>
+                <a href="<?= base_path() ?>/pages/pricing.php" class="link-muted">Compare all features in detail →</a>
             </div>
         </div>
     </section>
@@ -247,8 +247,8 @@ if (empty($plans)) {
         <div class="container text-center">
             <h2 id="cta-heading" class="cta-title">Ready to protect your pet?</h2>
             <p class="cta-subtitle">Join thousands of pet parents who trust PawShield.</p>
-            <a href="/auth/register.php" class="btn btn-cta btn-lg">
-                Get Started Free <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
+            <a href="<?= base_path() ?>/auth/register.php" class="btn btn-cta btn-lg">
+                Get Started For Free <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
             </a>
         </div>
     </section>

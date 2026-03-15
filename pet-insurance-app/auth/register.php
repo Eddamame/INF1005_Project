@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['user_role']  = 'customer';
         $_SESSION['user_name']  = $firstName;
 
-        header('Location: /dashboard/my-pets.php');
+        header('Location: ' . BASE_PATH . '/dashboard/my-pets.php');
         exit;
     }
 }
@@ -89,109 +89,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Register — Pet Insurance</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register — PawShield Pet Insurance</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?= base_path() ?>/assets/css/style.css">
+    <link rel="stylesheet" href="<?= base_path() ?>/assets/css/accessibility.css">
 </head>
-<body class="bg-light">
-<!-- ── Navbar ──────────────────────────────────────────────── -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="/index.php">🐾 PawShield</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+<body>
 
-        <div class="collapse navbar-collapse" id="navbarMain">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/index.php">Home</a>
-                </li>
-                <?php if (!empty($_SESSION['user_id'])): ?>
-                <li class="nav-item">
-                    <a class="nav-link" href="/../dashboard/my-pets.php">My Pets</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/../dashboard/profile.php">Profile</a>
-                </li>
-                <?php if (($_SESSION['user_role'] ?? '') === 'admin'): ?>
-                <li class="nav-item">
-                    <a class="nav-link text-warning" href="/admin/index.php">Admin</a>
-                </li>
-                <?php endif; ?>
-                <?php endif; ?>
-            </ul>
+<a class="skip-link" href="#main-content">Skip to main content</a>
 
-            <ul class="navbar-nav ms-auto">
-                <?php if (!empty($_SESSION['user_id'])): ?>
-                <li class="nav-item">
-                    <span class="nav-link text-light">
-                        👋 <?= htmlspecialchars($_SESSION['user_name'] ?? 'User', ENT_QUOTES, 'UTF-8') ?>
-                    </span>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link btn btn-outline-light btn-sm px-3 ms-2"
-                       href="/pet-insurance-app/auth/logout.php">Log Out</a>
-                </li>
-                <?php else: ?>
-                <li class="nav-item">
-                    <a class="nav-link" href="/pet-insurance-app/auth/login.php">Log In</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link btn btn-primary btn-sm px-3 ms-2 text-white"
-                       href="/pet-insurance-app/auth/register.php">Register</a>
-                </li>
-                <?php endif; ?>
-            </ul>
+<?php require_once __DIR__ . '/../includes/navbar.php'; ?>
+
+<main id="main-content">
+    <section class="auth-hero-section">
+        <div class="hero-bg-shapes" aria-hidden="true">
+            <div class="hero-shape hero-shape-1"></div>
+            <div class="hero-shape hero-shape-2"></div>
         </div>
-    </div>
-</nav>
-<div class="container py-5" style="max-width:520px">
-    <h2 class="mb-4">Create Account</h2>
-    <form method="POST" novalidate>
-        <?= csrfField() ?>
+        <div class="container hero-content position-relative">
+            <div class="row align-items-center min-vh-75 py-5">
+                <div class="col-lg-5">
+                    <div class="p-4 p-lg-5 rounded-3 shadow-lg auth-form-card">
+                        <h1 class="h2 mb-4" style="color: var(--ps-navy);">Create Account</h1>
+                        <form method="POST" novalidate>
+                            <?= csrfField() ?>
 
-        <div class="row g-3">
-            <div class="col-6">
-                <label class="form-label">First Name</label>
-                <input type="text" name="first_name" class="form-control <?= isset($errors['first_name']) ? 'is-invalid' : '' ?>"
-                       value="<?= esc($old['first_name'] ?? '') ?>" required>
-                <div class="invalid-feedback"><?= esc($errors['first_name'] ?? '') ?></div>
-            </div>
-            <div class="col-6">
-                <label class="form-label">Last Name</label>
-                <input type="text" name="last_name" class="form-control <?= isset($errors['last_name']) ? 'is-invalid' : '' ?>"
-                       value="<?= esc($old['last_name'] ?? '') ?>" required>
-                <div class="invalid-feedback"><?= esc($errors['last_name'] ?? '') ?></div>
-            </div>
-            <div class="col-12">
-                <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>"
-                       value="<?= esc($old['email'] ?? '') ?>" required>
-                <div class="invalid-feedback"><?= esc($errors['email'] ?? '') ?></div>
-            </div>
-            <div class="col-12">
-                <label class="form-label">Phone <span class="text-muted">(optional)</span></label>
-                <input type="tel" name="phone" class="form-control"
-                       value="<?= esc($old['phone'] ?? '') ?>">
-            </div>
-            <div class="col-12">
-                <label class="form-label">Password</label>
-                <input type="password" name="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" required>
-                <div class="form-text">Min 8 chars, one uppercase letter, one number.</div>
-                <div class="invalid-feedback"><?= esc($errors['password'] ?? '') ?></div>
-            </div>
-            <div class="col-12">
-                <label class="form-label">Confirm Password</label>
-                <input type="password" name="confirm_password"
-                       class="form-control <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" required>
-                <div class="invalid-feedback"><?= esc($errors['confirm_password'] ?? '') ?></div>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label class="form-label">First Name</label>
+                                    <input type="text" name="first_name" class="form-control <?= isset($errors['first_name']) ? 'is-invalid' : '' ?>"
+                                           value="<?= esc($old['first_name'] ?? '') ?>" required>
+                                    <div class="invalid-feedback"><?= esc($errors['first_name'] ?? '') ?></div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Last Name</label>
+                                    <input type="text" name="last_name" class="form-control <?= isset($errors['last_name']) ? 'is-invalid' : '' ?>"
+                                           value="<?= esc($old['last_name'] ?? '') ?>" required>
+                                    <div class="invalid-feedback"><?= esc($errors['last_name'] ?? '') ?></div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" name="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>"
+                                           value="<?= esc($old['email'] ?? '') ?>" required>
+                                    <div class="invalid-feedback"><?= esc($errors['email'] ?? '') ?></div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Phone <span class="text-muted">(optional)</span></label>
+                                    <input type="tel" name="phone" class="form-control"
+                                           value="<?= esc($old['phone'] ?? '') ?>">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" name="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" required>
+                                    <div class="form-text">Min 8 chars, one uppercase letter, one number.</div>
+                                    <div class="invalid-feedback"><?= esc($errors['password'] ?? '') ?></div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Confirm Password</label>
+                                    <input type="password" name="confirm_password"
+                                           class="form-control <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" required>
+                                    <div class="invalid-feedback"><?= esc($errors['confirm_password'] ?? '') ?></div>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary w-100 mt-4" style="background: var(--ps-teal); border-color: var(--ps-teal);">Create Account</button>
+                            <p class="text-center mt-3 mb-0">Already have an account? <a href="<?= base_path() ?>/auth/login.php">Log in</a></p>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-lg-7 d-none d-lg-flex justify-content-center align-items-center" aria-hidden="true">
+                    <div class="hero-card-float auth-float-cards">
+                        <div class="float-card fc-1">
+                            <i class="bi bi-heart-pulse"></i>
+                            <span>Add your pet</span>
+                            <strong>We've got them covered</strong>
+                        </div>
+                        <div class="float-card fc-2">
+                            <i class="bi bi-cpu"></i>
+                            <span>AI Scanning…</span>
+                            <div class="scan-bar"><div class="scan-fill"></div></div>
+                        </div>
+                        <div class="float-card fc-3">
+                            <i class="bi bi-file-earmark-check"></i>
+                            <span>Claim Approved</span>
+                            <strong>$420.00</strong>
+                        </div>
+                        <div class="hero-paw-large">🐾</div>
+                    </div>
+                </div>
             </div>
         </div>
+    </section>
+</main>
 
-        <button class="btn btn-primary w-100 mt-4">Create Account</button>
-        <p class="text-center mt-3">Already have an account? <a href="login.php">Log in</a></p>
-    </form>
-</div>
-</body>
-</html>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

@@ -14,14 +14,14 @@
  */
 function requireLogin(): void {
     if (empty($_SESSION['user_id'])) {
-        header('Location: /auth/login.php');
+        header('Location: ' . (defined('BASE_PATH') ? BASE_PATH : '') . '/auth/login.php');
         exit;
     }
 }
 
 function isLoggedIn(): void {
     if (!empty($_SESSION['user_id'])) {
-        header('Location: /dashboard/my-pets.php');
+        header('Location: ' . (defined('BASE_PATH') ? BASE_PATH : '') . '/dashboard/my-pets.php');
         exit;
     }
 }
