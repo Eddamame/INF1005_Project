@@ -15,6 +15,8 @@ if ($nav_script === 'index.php' && strpos($nav_dir, 'dashboard') === false && st
     elseif ($nav_script === 'pricing.php') $nav_active = 'pricing';
     elseif ($nav_script === 'how-it-works.php') $nav_active = 'how-it-works';
     elseif ($nav_script === 'contact.php') $nav_active = 'contact';
+} elseif (strpos($nav_dir, 'dashboard') !== false && $nav_script === 'my-pets.php') {
+    $nav_active = 'my-pets';
 }
 ?>
 <nav class="navbar navbar-expand-lg pawshield-nav" aria-label="Main navigation">
@@ -58,7 +60,7 @@ if ($nav_script === 'index.php' && strpos($nav_dir, 'dashboard') === false && st
                 <?php if (!empty($_SESSION['user_id'])): ?>
                 <!-- Logged-in only -->
                 <li class="nav-item">
-                    <a class="nav-link" href="<?= base_path() ?>/dashboard/my-pets.php">
+                    <a class="nav-link<?= $nav_active === 'my-pets' ? ' active' : '' ?>" href="<?= base_path() ?>/dashboard/my-pets.php">
                         <i class="bi bi-heart-pulse me-1" aria-hidden="true"></i>My Pets
                     </a>
                 </li>
@@ -83,7 +85,8 @@ if ($nav_script === 'index.php' && strpos($nav_dir, 'dashboard') === false && st
                 </li>
                 <li class="nav-item">
                     <a class="nav-link btn btn-outline-light btn-sm px-3"
-                       href="<?= base_path() ?>/auth/logout.php">Log Out</a>
+                       href="<?= base_path() ?>/auth/logout.php"
+                       onclick="return confirm('Are you sure you want to log out?');">Log Out</a>
                 </li>
                 <?php else: ?>
                 <li class="nav-item">

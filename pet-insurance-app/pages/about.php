@@ -127,30 +127,30 @@ require_once __DIR__ . '/../includes/csrf.php';
                 <span class="section-label">Why PawShield</span>
                 <h2 id="values-heading" class="section-title">What we stand for</h2>
             </div>
-            <div class="row g-4">
+            <div class="row g-4 values-cards">
                 <div class="col-md-6 col-lg-3">
-                    <div class="text-center p-4 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
+                    <div class="value-card value-card--1 text-center p-4 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
                         <i class="bi bi-eye-fill d-block mb-2" style="font-size:2rem; color:var(--ps-teal);" aria-hidden="true"></i>
                         <h3 class="h6 fw-bold mb-2" style="color:var(--ps-navy);">Transparency</h3>
                         <p class="small text-muted mb-0">Clear terms, clear payouts. No fine-print surprises.</p>
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-3">
-                    <div class="text-center p-4 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
+                    <div class="value-card value-card--2 text-center p-4 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
                         <i class="bi bi-speedometer2 d-block mb-2" style="font-size:2rem; color:var(--ps-teal);" aria-hidden="true"></i>
                         <h3 class="h6 fw-bold mb-2" style="color:var(--ps-navy);">Speed</h3>
                         <p class="small text-muted mb-0">AI does the heavy lifting so you get answers fast.</p>
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-3">
-                    <div class="text-center p-4 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
+                    <div class="value-card value-card--3 text-center p-4 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
                         <i class="bi bi-person-hearts d-block mb-2" style="font-size:2rem; color:var(--ps-teal);" aria-hidden="true"></i>
                         <h3 class="h6 fw-bold mb-2" style="color:var(--ps-navy);">Care</h3>
                         <p class="small text-muted mb-0">We treat every claim like it’s for our own pet.</p>
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-3">
-                    <div class="text-center p-4 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
+                    <div class="value-card value-card--4 text-center p-4 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
                         <i class="bi bi-patch-check-fill d-block mb-2" style="font-size:2rem; color:var(--ps-teal);" aria-hidden="true"></i>
                         <h3 class="h6 fw-bold mb-2" style="color:var(--ps-navy);">Trust</h3>
                         <p class="small text-muted mb-0">Verified vet clinics and secure, reliable systems.</p>
@@ -178,4 +178,19 @@ require_once __DIR__ . '/../includes/csrf.php';
 
 </main>
 
+<script>
+(function() {
+    var el = document.querySelector('.values-cards');
+    if (!el) return;
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { rootMargin: '0px 0px -80px 0px', threshold: 0.1 });
+    observer.observe(el);
+})();
+</script>
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

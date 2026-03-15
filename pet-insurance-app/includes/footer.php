@@ -17,9 +17,9 @@
                     Upload a receipt. Get an instant quote.
                 </p>
                 <div class="footer-socials mt-3" aria-label="Social media links">
-                    <a href="#" aria-label="Facebook"><i class="bi bi-facebook" aria-hidden="true"></i></a>
-                    <a href="#" aria-label="Instagram"><i class="bi bi-instagram" aria-hidden="true"></i></a>
-                    <a href="#" aria-label="Twitter / X"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>
+                    <a href="<?= base_path() ?>/pages/social-facebook.php" aria-label="Facebook"><i class="bi bi-facebook" aria-hidden="true"></i></a>
+                    <a href="<?= base_path() ?>/pages/social-instagram.php" aria-label="Instagram"><i class="bi bi-instagram" aria-hidden="true"></i></a>
+                    <a href="<?= base_path() ?>/pages/social-twitter.php" aria-label="Twitter / X"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>
                 </div>
             </div>
 

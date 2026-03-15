@@ -50,11 +50,19 @@
     outline-color: #ffffff;
 }
 
-/* Buttons: larger, more visible focus indicator */
-.btn:focus-visible {
+.btn:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-outline-primary:focus-visible {
     outline: 3px solid #0D9488;
     outline-offset: 4px;
     box-shadow: 0 0 0 5px rgba(13, 148, 136, 0.25);
+}
+
+main a:focus-visible {
+    outline: 3px solid #0D9488;
+    outline-offset: 3px;
+    border-radius: 2px;
 }
 
 /* Form controls */

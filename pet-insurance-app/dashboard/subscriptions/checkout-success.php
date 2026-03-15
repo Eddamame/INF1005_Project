@@ -45,6 +45,12 @@ if ($subId && $db instanceof PDO) {
         }
     }
 }
+
+$breadcrumb_items = [
+    ['My Pets', base_path() . '/dashboard/my-pets.php'],
+    ['Review & Pay', base_path() . '/dashboard/subscriptions/review-and-pay.php'],
+    ['Success', ''],
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -62,7 +68,8 @@ if ($subId && $db instanceof PDO) {
 <?php require_once __DIR__ . '/../../includes/navbar.php'; ?>
 
 <div class="container py-5">
-    <div class="row justify-content-center">
+    <?php require_once __DIR__ . '/../../includes/breadcrumb.php'; ?>
+    <div class="row justify-content-center mt-3">
         <div class="col-lg-6 text-center">
             <div class="card border-0 shadow-sm">
                 <div class="card-body py-5">

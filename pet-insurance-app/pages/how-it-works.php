@@ -250,6 +250,7 @@ $steps = [
         </div>
     </section>
 
+    <?php require_once __DIR__ . '/../includes/back-to-top.php'; ?>
 </main>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

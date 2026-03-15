@@ -80,9 +80,9 @@ $planFeatured = [false, true, false];
                     Our plans help with the costs of vet care so you can focus on getting your pet the best treatment.
                 </p>
             </div>
-            <div class="row g-4">
+            <div class="row g-4 services-cover-cards">
                 <div class="col-sm-6 col-lg-3">
-                    <div class="d-flex gap-3 p-3 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
+                    <div class="cover-card d-flex gap-3 p-3 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
                         <div class="flex-shrink-0 rounded-2 d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:var(--ps-teal-light);">
                             <i class="bi bi-heart-pulse" style="color:var(--ps-teal); font-size:1.25rem;"></i>
                         </div>
@@ -93,7 +93,7 @@ $planFeatured = [false, true, false];
                     </div>
                 </div>
                 <div class="col-sm-6 col-lg-3">
-                    <div class="d-flex gap-3 p-3 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
+                    <div class="cover-card cover-card--2 d-flex gap-3 p-3 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
                         <div class="flex-shrink-0 rounded-2 d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:var(--ps-teal-light);">
                             <i class="bi bi-bandaid" style="color:var(--ps-teal); font-size:1.25rem;"></i>
                         </div>
@@ -104,7 +104,7 @@ $planFeatured = [false, true, false];
                     </div>
                 </div>
                 <div class="col-sm-6 col-lg-3">
-                    <div class="d-flex gap-3 p-3 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
+                    <div class="cover-card cover-card--3 d-flex gap-3 p-3 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
                         <div class="flex-shrink-0 rounded-2 d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:var(--ps-teal-light);">
                             <i class="bi bi-hospital" style="color:var(--ps-teal); font-size:1.25rem;"></i>
                         </div>
@@ -115,7 +115,7 @@ $planFeatured = [false, true, false];
                     </div>
                 </div>
                 <div class="col-sm-6 col-lg-3">
-                    <div class="d-flex gap-3 p-3 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
+                    <div class="cover-card cover-card--4 d-flex gap-3 p-3 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
                         <div class="flex-shrink-0 rounded-2 d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:var(--ps-teal-light);">
                             <i class="bi bi-file-earmark-medical" style="color:var(--ps-teal); font-size:1.25rem;"></i>
                         </div>

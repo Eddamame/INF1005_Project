@@ -66,6 +66,11 @@ $parsed = [];
 if ($latestCompleted && !empty($latestCompleted['ai_parsed_data'])) {
     $parsed = json_decode($latestCompleted['ai_parsed_data'], true) ?: [];
 }
+
+$breadcrumb_items = [
+    ['My Pets', base_path() . '/dashboard/my-pets.php'],
+    ['Claim ' . $claim['reference_id'], ''],
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -105,7 +110,8 @@ if ($latestCompleted && !empty($latestCompleted['ai_parsed_data'])) {
 </nav>
 
 <div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <?php require_once __DIR__ . '/../../includes/breadcrumb.php'; ?>
+    <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
         <h2>Claim <?= esc($claim['reference_id']) ?></h2>
         <span class="badge bg-secondary text-uppercase"><?= esc($claim['status']) ?></span>
     </div>

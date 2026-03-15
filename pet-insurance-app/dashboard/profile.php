@@ -70,6 +70,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $success = 'Password changed successfully.';
     }
 }
+
+$breadcrumb_items = [
+    ['Dashboard', base_path() . '/dashboard/my-pets.php'],
+    ['Profile', ''],
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -83,11 +88,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     <link rel="stylesheet" href="<?= base_path() ?>/assets/css/accessibility.css">
 </head>
 <body>
-    
-<!-- ── Navbar (was a TODO comment — now using our include) ── -->
+
 <?php require_once __DIR__ . '/../includes/navbar.php'; ?>
+
 <div class="container py-5" style="max-width:600px">
-    <h2 class="mb-4">My Profile</h2>
+    <?php require_once __DIR__ . '/../includes/breadcrumb.php'; ?>
+    <h2 class="mb-4 mt-3">My Profile</h2>
 
     <?php if ($success): ?>
         <div class="alert alert-success"><?= esc($success) ?></div>

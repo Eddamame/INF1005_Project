@@ -29,7 +29,7 @@ require_once __DIR__ . '/config/session.php';
             <p class="display-1 mb-2" style="color: var(--ps-teal); font-weight: 800;">404</p>
             <h1 class="h2 mb-3" style="color: var(--ps-navy);">Page not found</h1>
             <p class="text-muted mb-4">The page you’re looking for doesn’t exist or has been moved.</p>
-            <a href="<?= base_path() ?>/index.php" class="btn btn-primary" style="background: var(--ps-teal); border-color: var(--ps-teal);">Back to home</a>
+            <a href="<?= base_path() ?>/index.php" class="btn btn-primary">Back to home</a>
         </div>
     </section>
 </main>

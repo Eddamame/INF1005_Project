@@ -49,6 +49,11 @@ try {
     http_response_code(500);
     die('Unable to load quote.');
 }
+
+$breadcrumb_items = [
+    ['My Pets', base_path() . '/dashboard/my-pets.php'],
+    ['Quote ' . $quote['reference_id'], ''],
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -87,7 +92,8 @@ try {
 </nav>
 
 <div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <?php require_once __DIR__ . '/../../includes/breadcrumb.php'; ?>
+    <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
         <h2>Quote <?= esc($quote['reference_id']) ?></h2>
         <span class="badge bg-secondary text-uppercase"><?= esc($quote['status']) ?></span>
     </div>

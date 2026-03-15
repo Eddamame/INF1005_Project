@@ -1,14 +1,7 @@
 <?php
 /**
- * Pet Insurance App — Landing Page
- *
- * TODO (Role 2 Phase 1):
- *   - Hero section with CTA
- *   - "How it works" 3-step section
- *   - Plan highlight cards
- *   - Testimonials section
+ * Landing page.
  */
-
 require_once __DIR__ . '/config/constants.php';
 require_once __DIR__ . '/config/session.php';
 require_once __DIR__ . '/config/database.php';
@@ -16,7 +9,6 @@ require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/sanitize.php';
 require_once __DIR__ . '/includes/csrf.php';
 
-require_once 'config/database.php';
 $plans = [];
 if ($db instanceof PDO) {
     $stmt  = $db->query("SELECT * FROM insurance_plans WHERE is_active = 1 ORDER BY monthly_premium ASC LIMIT 3");
@@ -35,33 +27,24 @@ if (empty($plans)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- kept from teammate's original -->
     <meta name="csrf-token" content="<?php echo esc(generateCsrfToken()); ?>">
     <title>PawShield — Pet Insurance Made Simple</title>
-    <!-- Bootstrap: CDN first (always works), local as bonus if file exists -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <!-- PawShield custom CSS — root-relative paths, work from any page -->
     <link rel="stylesheet" href="<?= base_path() ?>/assets/css/style.css">
     <link rel="stylesheet" href="<?= base_path() ?>/assets/css/accessibility.css">
 </head>
 <body>
 
-<!-- Skip to main content (WCAG) -->
 <a class="skip-link" href="#main-content">Skip to main content</a>
 
-<!-- ── Navbar (was a TODO comment — now using our include) ── -->
 <?php require_once __DIR__ . '/includes/navbar.php'; ?>
 
 <main id="main-content">
 
-    <!-- ══════════════════════════════════════════
-         HERO — Phase 1 TODO fulfilled
-    ══════════════════════════════════════════ -->
     <section class="hero-section" aria-labelledby="hero-heading">
         <div class="hero-bg-shapes" aria-hidden="true">
             <div class="hero-shape hero-shape-1"></div>
@@ -119,9 +102,6 @@ if (empty($plans)) {
         </div>
     </section>
 
-    <!-- ══════════════════════════════════════════
-         HOW IT WORKS — Phase 1 TODO fulfilled
-    ══════════════════════════════════════════ -->
     <section class="how-section py-6" id="how-it-works" aria-labelledby="how-heading">
         <div class="container">
             <div class="section-header text-center mb-5">
@@ -152,9 +132,6 @@ if (empty($plans)) {
         </div>
     </section>
 
-    <!-- ══════════════════════════════════════════
-         PLAN HIGHLIGHTS — Phase 1 TODO fulfilled
-    ══════════════════════════════════════════ -->
     <section class="plans-section py-6" id="plans" aria-labelledby="plans-heading">
         <div class="container">
             <div class="section-header text-center mb-5">
@@ -202,9 +179,6 @@ if (empty($plans)) {
         </div>
     </section>
 
-    <!-- ══════════════════════════════════════════
-         TESTIMONIALS — Phase 1 TODO fulfilled
-    ══════════════════════════════════════════ -->
     <section class="testimonials-section py-6" aria-labelledby="testimonials-heading">
         <div class="container">
             <div class="section-header text-center mb-5">
@@ -243,7 +217,6 @@ if (empty($plans)) {
         </div>
     </section>
 
-    <!-- CTA -->
     <section class="cta-section py-6" aria-labelledby="cta-heading">
         <div class="container text-center">
             <h2 id="cta-heading" class="cta-title">Ready to protect your pet?</h2>
@@ -254,18 +227,16 @@ if (empty($plans)) {
         </div>
     </section>
 
-    <!-- ── Dev info strip kept from teammate's original ─────── -->
     <?php if (defined('APP_ENV') && APP_ENV === 'local'): ?>
     <div class="container py-3 text-center"
          style="font-size:0.8rem; color:#6b7280; border-top:1px solid #e5e7eb;">
         <strong>Environment:</strong> <?php echo esc(APP_ENV); ?> &nbsp;|&nbsp;
         <strong>Scanner mode:</strong> <?php echo esc(AI_SCANNER_MODE); ?> &nbsp;|&nbsp;
         <strong>Database:</strong> <?php echo esc(DB_HOST); ?>/<?php echo esc(DB_NAME); ?> &nbsp;|&nbsp;
-        <span class="text-success">✅ Phase 0 setup verified — ready for development.</span>
+        <span class="text-success">✅ Development environment</span>
     </div>
     <?php endif; ?>
 
 </main>
 
-<!-- ── Footer (was a TODO comment — now using our include) ── -->
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

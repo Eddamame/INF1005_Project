@@ -37,7 +37,8 @@ function getPetForUser(PDO $db, int $petId, int $userId): array|false {
     return $stmt->fetch();
 }
 
-$action = inputString('action', 'GET') ?? inputString('action') ?? '';
+// Prefer POST so form submit (action=update) wins over URL (action=edit)
+$action = inputString('action') ?? inputString('action', 'GET') ?? '';
 
 // ── DELETE ───────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'delete') {
@@ -153,97 +154,163 @@ if ($db instanceof PDO && !empty($pets)) {
         $planByPetId[(int) $row['pet_id']] = $row['plan_name'];
     }
 }
+
+$breadcrumb_items = [
+    ['Dashboard', base_path() . '/dashboard/my-pets.php'],
+    ['My Pets', ''],
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Pets — Pet Insurance</title>
+    <title>My Pets — PawShield Pet Insurance</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= base_path() ?>/assets/css/style.css">
     <link rel="stylesheet" href="<?= base_path() ?>/assets/css/accessibility.css">
 </head>
 <body>
-    
-<!-- ── Navbar (was a TODO comment — now using our include) ── -->
+
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
 <?php require_once __DIR__ . '/../includes/navbar.php'; ?>
 
-
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>My Pets</h2>
-        <a href="?action=add" class="btn btn-success">+ Add Pet</a>
-    </div>
-
-    <?php if ($success): ?>
-        <div class="alert alert-success"><?= esc($success) ?></div>
-    <?php endif; ?>
-
-    <?php if ($action === 'add' || ($action === 'update' && $errors)): ?>
-    <!-- ADD FORM -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5>Add a New Pet</h5>
-            <?= renderPetForm($errors, [], 'add', $SPECIES) ?>
+<main id="main-content">
+    <!-- Hero -->
+    <section class="hero-section hero-section--short" aria-labelledby="mypets-hero-heading">
+        <div class="hero-bg-shapes" aria-hidden="true">
+            <div class="hero-shape hero-shape-1"></div>
+            <div class="hero-shape hero-shape-2"></div>
         </div>
-    </div>
-    <?php endif; ?>
-
-    <?php if ($editPet || ($action === 'update' && $errors && $editPet)): ?>
-    <!-- EDIT FORM -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5>Edit Pet</h5>
-            <?= renderPetForm($errors, $editPet, 'update', $SPECIES) ?>
+        <div class="container hero-content">
+            <div class="row justify-content-center text-center">
+                <div class="col-lg-8">
+                    <span class="hero-badge">
+                        <i class="bi bi-heart-pulse me-1" aria-hidden="true"></i>Dashboard
+                    </span>
+                    <h1 id="mypets-hero-heading" class="hero-heading">My Pets</h1>
+                    <p class="hero-subtitle mb-0 text-center mx-auto" style="max-width: 32rem;">
+                        Manage your pets and get them covered with a plan that fits.
+                    </p>
+                </div>
+            </div>
         </div>
-    </div>
-    <?php endif; ?>
+    </section>
 
-    <!-- PET LIST -->
-    <?php if (empty($pets)): ?>
-        <p class="text-muted">You haven't added any pets yet.</p>
-    <?php else: ?>
-    <div class="table-responsive">
-        <table class="table table-bordered align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Name</th><th>Species</th><th>Breed</th>
-                    <th>Date of Birth</th><th>Microchip ID</th><th>Plan</th><th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php foreach ($pets as $pet): ?>
-                <tr>
-                    <td><?= esc($pet['name']) ?></td>
-                    <td><?= esc(ucfirst($pet['species'])) ?></td>
-                    <td><?= esc($pet['breed'] ?? '—') ?></td>
-                    <td><?= esc($pet['date_of_birth'] ?? '—') ?></td>
-                    <td><?= esc($pet['microchip_id'] ?? '—') ?></td>
-                    <td><?= isset($planByPetId[(int)$pet['id']]) ? esc($planByPetId[(int)$pet['id']]) : '—' ?></td>
-                    <td>
-                        <a href="?action=edit&pet_id=<?= (int)$pet['id'] ?>"
-                           class="btn btn-sm btn-outline-primary me-1">Edit</a>
-                        <form method="POST" class="d-inline me-1"
-                              onsubmit="return confirm('Delete <?= esc($pet['name']) ?>?')">
-                            <?= csrfField() ?>
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="pet_id" value="<?= (int)$pet['id'] ?>">
-                            <button class="btn btn-sm btn-outline-danger">Delete</button>
-                        </form>
-                        <a href="<?= base_path() ?>/dashboard/subscriptions/review-and-pay.php?pet_id=<?= (int)$pet['id'] ?>"
-                           class="btn btn-sm btn-success">
-                            Get coverage
+    <section class="py-6">
+        <div class="container">
+            <?php require_once __DIR__ . '/../includes/breadcrumb.php'; ?>
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3 mb-4 mt-3">
+                <h2 class="h4 mb-0" style="color: var(--ps-navy);">Your pets</h2>
+                <a href="?action=add" class="btn btn-success">
+                    <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>Add Pet
+                </a>
+            </div>
+
+            <?php if ($success): ?>
+                <div class="alert alert-success"><?= esc($success) ?></div>
+            <?php endif; ?>
+
+            <?php if ($action === 'add' || ($action === 'update' && $errors)): ?>
+            <div class="card border-0 shadow-sm mb-4 my-pets-form-card">
+                <div class="card-body p-4 p-lg-5">
+                    <h3 class="h5 mb-4" style="color: var(--ps-navy);">Add a New Pet</h3>
+                    <?= renderPetForm($errors, [], 'add', $SPECIES) ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <?php if ($editPet || ($action === 'update' && $errors && $editPet)): ?>
+            <div class="card border-0 shadow-sm mb-4 my-pets-form-card">
+                <div class="card-body p-4 p-lg-5">
+                    <h3 class="h5 mb-4" style="color: var(--ps-navy);">Edit Pet</h3>
+                    <?= renderPetForm($errors, $editPet, 'update', $SPECIES) ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <?php if (empty($pets)): ?>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5 text-center">
+                        <i class="bi bi-heart text-muted d-block mb-3" style="font-size: 3rem;" aria-hidden="true"></i>
+                        <p class="text-muted mb-4">You haven't added any pets yet.</p>
+                        <a href="?action=add" class="btn btn-primary">
+                            <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>Add your first pet
                         </a>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-    <?php endif; ?>
-</div>
+                    </div>
+                </div>
+            <?php else: ?>
+            <div class="card border-0 shadow-sm my-pets-table-card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 my-pets-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Species</th>
+                                    <th>Breed</th>
+                                    <th>Date of Birth</th>
+                                    <th>Microchip ID</th>
+                                    <th>Plan</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <?php foreach ($pets as $pet): ?>
+                                <tr>
+                                    <td>
+                                        <span class="pet-species-icon me-2" aria-hidden="true" title="<?= esc(ucfirst($pet['species'])) ?>">
+                                            <?php if (strtolower($pet['species']) === 'dog'): ?>
+                                                <i class="bi bi-star-fill text-teal"></i>
+                                            <?php elseif (strtolower($pet['species']) === 'cat'): ?>
+                                                <i class="bi bi-heart-fill text-teal"></i>
+                                            <?php else: ?>
+                                                <i class="bi bi-circle-fill text-teal"></i>
+                                            <?php endif; ?>
+                                        </span>
+                                        <strong><?= esc($pet['name']) ?></strong>
+                                    </td>
+                                    <td><?= esc(ucfirst($pet['species'])) ?></td>
+                                    <td><?= esc($pet['breed'] ?? '—') ?></td>
+                                    <td><?= esc($pet['date_of_birth'] ?? '—') ?></td>
+                                    <td><?= esc($pet['microchip_id'] ?? '—') ?></td>
+                                    <td><?= isset($planByPetId[(int)$pet['id']]) ? esc($planByPetId[(int)$pet['id']]) : '—' ?></td>
+                                    <td>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            <a href="?action=edit&pet_id=<?= (int)$pet['id'] ?>"
+                                               class="btn btn-sm btn-outline-primary">Edit</a>
+                                            <form method="POST" class="d-inline"
+                                                  onsubmit="return confirm('Delete <?= esc($pet['name']) ?>?')">
+                                                <?= csrfField() ?>
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="pet_id" value="<?= (int)$pet['id'] ?>">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                            </form>
+                                            <a href="<?= base_path() ?>/dashboard/subscriptions/review-and-pay.php?pet_id=<?= (int)$pet['id'] ?>"
+                                               class="btn btn-sm btn-primary">
+                                                Get coverage
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+    </section>
+</main>
+
+<script src="<?= base_path() ?>/assets/js/inline-validation.js"></script>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>
 
 <?php
 function renderPetForm(array $errors, array $pet, string $action, array $species): string {
@@ -262,10 +329,10 @@ function renderPetForm(array $errors, array $pet, string $action, array $species
         <?= $hiddenId ?>
         <div class="row g-3">
             <div class="col-md-6">
-                <label class="form-label">Name *</label>
-                <input type="text" name="name"
+                <label class="form-label" for="pet_name">Name *</label>
+                <input type="text" name="name" id="pet_name"
                        class="form-control <?= isset($errors['name']) ? 'is-invalid' : '' ?>"
-                       value="<?= esc($pet['name'] ?? '') ?>" required>
+                       value="<?= esc($pet['name'] ?? '') ?>" required autofocus>
                 <div class="invalid-feedback"><?= esc($errors['name'] ?? '') ?></div>
             </div>
             <div class="col-md-6">
@@ -285,8 +352,9 @@ function renderPetForm(array $errors, array $pet, string $action, array $species
                 <label class="form-label">Date of Birth</label>
                 <input type="date" name="date_of_birth"
                        class="form-control <?= isset($errors['dob']) ? 'is-invalid' : '' ?>"
-                       value="<?= esc($pet['date_of_birth'] ?? '') ?>">
-                <div class="invalid-feedback"><?= esc($errors['dob'] ?? '') ?></div>
+                       value="<?= esc($pet['date_of_birth'] ?? '') ?>"
+                       data-inline-validate="dob">
+                <div class="invalid-feedback" data-inline-feedback><?= esc($errors['dob'] ?? '') ?></div>
             </div>
             <div class="col-md-3">
                 <label class="form-label">Microchip ID</label>

@@ -28,11 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 
     // Validation
+    // Hi Jk just added this to aggregate all the errors so the user doesn't have to submit multiple times to see them all
     if (!$firstName) $errors['first_name'] = 'First name is required.';
     if (!$lastName)  $errors['last_name']  = 'Last name is required.';
     if (!$email)     $errors['email']      = 'A valid email address is required.';
 
-    // Hi Jk just added this to aggregate all the errors so the user doesn't have to submit multiple times to see them all
     $passwordErrors = [];
     if (strlen($password) < 8) {
         $passwordErrors[] = 'at least 8 characters';
@@ -134,9 +134,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label">Email</label>
-                                    <input type="email" name="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>"
-                                           value="<?= esc($old['email'] ?? '') ?>" required>
-                                    <div class="invalid-feedback"><?= esc($errors['email'] ?? '') ?></div>
+                                    <input type="email" name="email" id="register-email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>"
+                                           value="<?= esc($old['email'] ?? '') ?>" required data-inline-validate="email">
+                                    <div class="invalid-feedback" data-inline-feedback><?= esc($errors['email'] ?? '') ?></div>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label">Phone <span class="text-muted">(optional)</span></label>
@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                             </div>
 
-                            <button class="btn btn-primary w-100 mt-4" style="background: var(--ps-teal); border-color: var(--ps-teal);">Create Account</button>
+                            <button class="btn btn-primary w-100 mt-4">Create Account</button>
                             <p class="text-center mt-3 mb-0">Already have an account? <a href="<?= base_path() ?>/auth/login.php">Log in</a></p>
                         </form>
                     </div>
@@ -187,4 +187,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </section>
 </main>
 
+<script src="<?= base_path() ?>/assets/js/inline-validation.js"></script>
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

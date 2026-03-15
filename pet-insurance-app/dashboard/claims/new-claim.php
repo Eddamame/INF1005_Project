@@ -76,6 +76,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // If a claim has just been created, keep it in a local variable so JS can use it
+
+$breadcrumb_items = [
+    ['My Pets', base_path() . '/dashboard/my-pets.php'],
+    ['New Claim', ''],
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -121,7 +126,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </nav>
 
 <div class="container py-5">
-    <div class="row">
+    <?php require_once __DIR__ . '/../../includes/breadcrumb.php'; ?>
+    <div class="row mt-3">
         <div class="col-lg-6">
             <h2 class="mb-4">Start a New Claim</h2>
 

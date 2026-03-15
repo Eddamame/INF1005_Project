@@ -70,12 +70,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </section>
 
     <!-- Contact form -->
-    <section class="py-6" aria-labelledby="contact-form-heading">
+    <section class="py-6 contact-section" aria-labelledby="contact-form-heading">
         <div class="container">
             <div class="row justify-content-center">
-                <div class="col-lg-8 col-xl-7">
-                    <div class="p-4 p-lg-5 rounded-3 shadow-sm contact-form-card">
-                        <h2 id="contact-form-heading" class="h3 mb-4" style="color: var(--ps-navy);">Send a message</h2>
+                <div class="col-lg-8 col-xl-7 contact-form-wrap">
+                    <div class="contact-form-card p-4 p-lg-5 rounded-3">
+                        <div class="contact-form-card-header mb-4">
+                            <span class="contact-form-icon rounded-circle d-inline-flex align-items-center justify-content-center mb-3" aria-hidden="true">
+                                <i class="bi bi-chat-dots-fill"></i>
+                            </span>
+                            <h2 id="contact-form-heading" class="h3 mb-0" style="color: var(--ps-navy);">Send a message</h2>
+                            <p class="text-muted small mt-1 mb-0">We’ll get back to you within 1–2 business days.</p>
+                        </div>
 
                         <?php if (!empty($successMessage)): ?>
                             <div class="alert alert-success" role="status">
@@ -101,6 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         class="form-control <?= isset($errors['name']) ? 'is-invalid' : '' ?>"
                                         placeholder="Your name"
                                         value="<?= esc($_POST['name'] ?? '') ?>"
+                                        autofocus
                                     >
                                     <?php if (isset($errors['name'])): ?>
                                         <div class="invalid-feedback"><?= esc($errors['name']) ?></div>
@@ -115,10 +122,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>"
                                         placeholder="you@example.com"
                                         value="<?= esc($_POST['email'] ?? '') ?>"
+                                        data-inline-validate="email"
                                     >
-                                    <?php if (isset($errors['email'])): ?>
-                                        <div class="invalid-feedback"><?= esc($errors['email']) ?></div>
-                                    <?php endif; ?>
+                                    <div class="invalid-feedback" data-inline-feedback><?= isset($errors['email']) ? esc($errors['email']) : '' ?></div>
                                 </div>
                                 <div class="col-12">
                                     <label for="contact-phone" class="form-label">Phone <span class="text-muted">(optional)</span></label>
@@ -173,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         <p class="small text-muted mt-4 mb-0 text-center">
                             <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
-                            We aim to respond within 1–2 business days.
+                            Secure form. We never share your details.
                         </p>
                     </div>
                 </div>
@@ -183,4 +189,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </main>
 
+<script src="<?= base_path() ?>/assets/js/inline-validation.js"></script>
+<script>
+(function() {
+    var el = document.querySelector('.contact-form-wrap');
+    if (!el) return;
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { rootMargin: '0px 0px -60px 0px', threshold: 0.15 });
+    observer.observe(el);
+})();
+</script>
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
