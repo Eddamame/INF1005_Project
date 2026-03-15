@@ -28,7 +28,7 @@ function base_path() {
     return htmlspecialchars(BASE_PATH, ENT_QUOTES, 'UTF-8');
 }
 
-// ── Database ────────────────────────���───────────────────────
+// ── Database ─────────────────────────────────────────────────
 // TCP connection in both environments — identical behaviour.
 define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
 define('DB_NAME', getenv('DB_NAME') ?: 'pet_insurance');

@@ -204,3 +204,16 @@ CREATE TABLE IF NOT EXISTS audit_log (
     INDEX idx_audit_entity (entity_type, entity_id),
     INDEX idx_audit_created (created_at)
 ) ENGINE=InnoDB;
+
+-- ============================================
+-- CONTACTS (CONTACT FORM)
+-- ============================================
+CREATE TABLE contact (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    subject VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
