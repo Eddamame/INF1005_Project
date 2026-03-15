@@ -7,7 +7,24 @@ require_once __DIR__ . '/../includes/sanitize.php';
 require_once __DIR__ . '/../auth/middleware.php';
 requireLogin();
 
-$userId  = (int) $_SESSION['user_id'];
+$userId = (int) ($_SESSION['user_id'] ?? 0);
+if ($userId <= 0) {
+    $_SESSION = [];
+    header('Location: ' . (defined('BASE_PATH') ? BASE_PATH : '') . '/auth/login.php');
+    exit;
+}
+
+// Ensure the user still exists in DB (e.g. not deleted)
+if ($db instanceof PDO) {
+    $stmt = $db->prepare('SELECT id FROM users WHERE id = :id LIMIT 1');
+    $stmt->execute([':id' => $userId]);
+    if (!$stmt->fetch()) {
+        $_SESSION = [];
+        header('Location: ' . (defined('BASE_PATH') ? BASE_PATH : '') . '/auth/login.php');
+        exit;
+    }
+}
+
 $errors  = [];
 $success = '';
 
@@ -49,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'add') {
                                              $errors['species'] = 'Please select a valid species.';
     if ($dob && !strtotime($dob))            $errors['dob']     = 'Invalid date of birth.';
 
-    if (!$errors) {
+    if (!$errors && $userId > 0) {
         $stmt = $db->prepare('
             INSERT INTO pets (user_id, name, species, breed, date_of_birth, microchip_id)
             VALUES (:uid, :name, :species, :breed, :dob, :chip)
@@ -121,6 +138,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'update') {
 $stmt = $db->prepare('SELECT * FROM pets WHERE user_id = :uid ORDER BY created_at DESC');
 $stmt->execute([':uid' => $userId]);
 $pets = $stmt->fetchAll();
+
+// Active subscriptions per pet (pet_id => plan name; one plan per pet for display)
+$planByPetId = [];
+if ($db instanceof PDO && !empty($pets)) {
+    $stmt = $db->prepare('
+        SELECT s.pet_id, ip.name AS plan_name
+        FROM subscriptions s
+        JOIN insurance_plans ip ON ip.id = s.plan_id
+        WHERE s.user_id = :uid AND s.status = :status
+    ');
+    $stmt->execute([':uid' => $userId, ':status' => 'active']);
+    while ($row = $stmt->fetch()) {
+        $planByPetId[(int) $row['pet_id']] = $row['plan_name'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -178,7 +210,7 @@ $pets = $stmt->fetchAll();
             <thead class="table-light">
                 <tr>
                     <th>Name</th><th>Species</th><th>Breed</th>
-                    <th>Date of Birth</th><th>Microchip ID</th><th>Actions</th>
+                    <th>Date of Birth</th><th>Microchip ID</th><th>Plan</th><th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -189,16 +221,21 @@ $pets = $stmt->fetchAll();
                     <td><?= esc($pet['breed'] ?? '—') ?></td>
                     <td><?= esc($pet['date_of_birth'] ?? '—') ?></td>
                     <td><?= esc($pet['microchip_id'] ?? '—') ?></td>
+                    <td><?= isset($planByPetId[(int)$pet['id']]) ? esc($planByPetId[(int)$pet['id']]) : '—' ?></td>
                     <td>
                         <a href="?action=edit&pet_id=<?= (int)$pet['id'] ?>"
-                           class="btn btn-sm btn-outline-primary">Edit</a>
-                        <form method="POST" class="d-inline"
+                           class="btn btn-sm btn-outline-primary me-1">Edit</a>
+                        <form method="POST" class="d-inline me-1"
                               onsubmit="return confirm('Delete <?= esc($pet['name']) ?>?')">
                             <?= csrfField() ?>
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="pet_id" value="<?= (int)$pet['id'] ?>">
                             <button class="btn btn-sm btn-outline-danger">Delete</button>
                         </form>
+                        <a href="<?= base_path() ?>/dashboard/subscriptions/review-and-pay.php?pet_id=<?= (int)$pet['id'] ?>"
+                           class="btn btn-sm btn-success">
+                            Get coverage
+                        </a>
                     </td>
                 </tr>
             <?php endforeach; ?>

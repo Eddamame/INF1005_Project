@@ -6,9 +6,32 @@
  *   - On GCE VM (production): APP_ENV is set to 'production' in /etc/apache2/envvars
  *   - On local dev:           APP_ENV is absent, defaults to 'local'
  *
- * Sensitive values (DB_PASS, processor IDs) come from environment variables
- * in production, and from hardcoded defaults locally.
+ * Sensitive values (DB_PASS, Stripe keys, etc.) come from environment variables.
+ * If a .env file exists in the project root, it is loaded here so getenv() works.
  */
+
+// ── Load .env (project root) so getenv() / $_ENV are populated ─
+$envFile = __DIR__ . '/../.env';
+if (is_file($envFile) && is_readable($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($lines !== false) {
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || strpos($line, '#') === 0) {
+                continue;
+            }
+            if (strpos($line, '=') !== false) {
+                list($name, $value) = explode('=', $line, 2);
+                $name  = trim($name);
+                $value = trim($value, " \t\"'");
+                if ($name !== '') {
+                    putenv($name . '=' . $value);
+                    $_ENV[$name] = $value;
+                }
+            }
+        }
+    }
+}
 
 // ── Environment ─────────────────────────────────────────────
 define('APP_ENV',       getenv('APP_ENV') ?: 'local');

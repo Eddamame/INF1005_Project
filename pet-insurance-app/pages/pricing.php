@@ -146,9 +146,15 @@ $planIcons = ['bi-shield', 'bi-shield-fill-check', 'bi-shield-fill-plus']; // sa
                             <th scope="row" class="pricing-table-feature"></th>
                             <?php foreach ($plans as $i => $plan): ?>
                             <td class="text-center <?= $i === $planFeaturedIndex ? 'pricing-table-cell-popular' : '' ?>">
-                                <a href="<?= base_path() ?>/auth/register.php" class="btn <?= $i === $planFeaturedIndex ? 'btn-primary' : 'btn-outline-primary' ?> pricing-table-cta">
-                                    Choose <?= htmlspecialchars($plan['name'], ENT_QUOTES, 'UTF-8') ?>
-                                </a>
+                                <?php if (empty($_SESSION['user_id'])): ?>
+                                    <a href="<?= base_path() ?>/auth/register.php" class="btn <?= $i === $planFeaturedIndex ? 'btn-primary' : 'btn-outline-primary' ?> pricing-table-cta">
+                                        Choose <?= htmlspecialchars($plan['name'], ENT_QUOTES, 'UTF-8') ?>
+                                    </a>
+                                <?php else: ?>
+                                    <a href="<?= base_path() ?>/dashboard/subscriptions/review-and-pay.php?plan_id=<?= (int)$plan['id'] ?>" class="btn <?= $i === $planFeaturedIndex ? 'btn-primary' : 'btn-outline-primary' ?> pricing-table-cta">
+                                        Choose <?= htmlspecialchars($plan['name'], ENT_QUOTES, 'UTF-8') ?>
+                                    </a>
+                                <?php endif; ?>
                             </td>
                             <?php endforeach; ?>
                         </tr>
