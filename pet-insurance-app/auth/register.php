@@ -28,7 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 
     // Validation
-    // Hi Jk just added this to aggregate all the errors so the user doesn't have to submit multiple times to see them all
     if (!$firstName) $errors['first_name'] = 'First name is required.';
     if (!$lastName)  $errors['last_name']  = 'Last name is required.';
     if (!$email)     $errors['email']      = 'A valid email address is required.';
@@ -51,6 +50,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['confirm_password'] = 'Passwords do not match.';
     }
 
+    // reCAPTCHA verification
+    $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
+    if (!$recaptchaResponse) {
+        $errors['captcha'] = 'Please complete the CAPTCHA.';
+    } elseif (RECAPTCHA_SECRET_KEY) {
+        $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
+        $response = file_get_contents($verifyUrl . '?' . http_build_query([
+            'secret'   => RECAPTCHA_SECRET_KEY,
+            'response' => $recaptchaResponse,
+            'remoteip' => $_SERVER['REMOTE_ADDR'] ?? '',
+        ]));
+        $result = json_decode($response, true);
+        if (empty($result['success'])) {
+            $errors['captcha'] = 'CAPTCHA verification failed. Please try again.';
+        }
+    }
+
     // Duplicate email check
     if (!$errors && $email) {
         $stmt = $db->prepare('SELECT id FROM users WHERE email = :email LIMIT 1');
@@ -62,9 +78,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors) {
         $hash = password_hash($password, PASSWORD_BCRYPT);
+
+        // Generate 6-digit verification code
+        $verificationCode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $verificationExpires = date('Y-m-d H:i:s', strtotime('+' . VERIFICATION_CODE_EXPIRY . ' minutes'));
+
         $stmt = $db->prepare('
-            INSERT INTO users (email, password_hash, first_name, last_name, phone)
-            VALUES (:email, :hash, :first_name, :last_name, :phone)
+            INSERT INTO users (email, password_hash, first_name, last_name, phone, email_verified, verification_code, verification_expires)
+            VALUES (:email, :hash, :first_name, :last_name, :phone, 0, :code, :expires)
         ');
         $stmt->execute([
             ':email'      => $email,
@@ -72,6 +93,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':first_name' => $firstName,
             ':last_name'  => $lastName,
             ':phone'      => $phone,
+            ':code'       => $verificationCode,
+            ':expires'    => $verificationExpires,
         ]);
 
         $userId = $db->lastInsertId();
@@ -79,8 +102,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['user_id']    = $userId;
         $_SESSION['user_role']  = 'customer';
         $_SESSION['user_name']  = $firstName;
+        $_SESSION['email_verified'] = false;
 
-        header('Location: ' . BASE_PATH . '/dashboard/my-pets.php');
+        // In production, email the code. For now, it's in the DB.
+        // Master code 000000 always works.
+
+        header('Location: ' . BASE_PATH . '/auth/verify-email.php');
         exit;
     }
 }
@@ -98,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= base_path() ?>/assets/css/style.css">
     <link rel="stylesheet" href="<?= base_path() ?>/assets/css/accessibility.css">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
 
@@ -134,9 +162,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label">Email</label>
-                                    <input type="email" name="email" id="register-email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>"
-                                           value="<?= esc($old['email'] ?? '') ?>" required data-inline-validate="email">
-                                    <div class="invalid-feedback" data-inline-feedback><?= esc($errors['email'] ?? '') ?></div>
+                                    <input type="email" name="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>"
+                                           value="<?= esc($old['email'] ?? '') ?>" required>
+                                    <div class="invalid-feedback"><?= esc($errors['email'] ?? '') ?></div>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label">Phone <span class="text-muted">(optional)</span></label>
@@ -155,9 +183,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                            class="form-control <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" required>
                                     <div class="invalid-feedback"><?= esc($errors['confirm_password'] ?? '') ?></div>
                                 </div>
+                                <div class="col-12">
+                                    <div class="g-recaptcha" data-sitekey="<?= esc(RECAPTCHA_SITE_KEY) ?>"></div>
+                                    <?php if (isset($errors['captcha'])): ?>
+                                        <div class="text-danger small mt-1"><?= esc($errors['captcha']) ?></div>
+                                    <?php endif; ?>
+                                </div>
                             </div>
 
-                            <button class="btn btn-primary w-100 mt-4">Create Account</button>
+                            <button class="btn btn-primary w-100 mt-4" style="background: var(--ps-teal); border-color: var(--ps-teal);">Create Account</button>
                             <p class="text-center mt-3 mb-0">Already have an account? <a href="<?= base_path() ?>/auth/login.php">Log in</a></p>
                         </form>
                     </div>
@@ -187,5 +221,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </section>
 </main>
 
-<script src="<?= base_path() ?>/assets/js/inline-validation.js"></script>
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

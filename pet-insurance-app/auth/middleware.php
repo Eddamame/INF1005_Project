@@ -27,6 +27,17 @@ function isLoggedIn(): void {
 }
 
 /**
+ * Redirect to email verification if the user hasn't verified yet.
+ * Call after requireLogin() on pages that need verified users.
+ */
+function requireVerified(): void {
+    if (isset($_SESSION['email_verified']) && $_SESSION['email_verified'] === false) {
+        header('Location: ' . BASE_PATH . '/auth/verify-email.php');
+        exit;
+    }
+}
+
+/**
  * Redirect to dashboard if the user is not an admin.
  * Always call requireLogin() first.
  */

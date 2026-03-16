@@ -17,8 +17,16 @@ $selectedPetId  = inputInt('pet_id', 'GET');
 // Load user's pets
 $pets = [];
 if ($db instanceof PDO) {
-    $stmt = $db->prepare('SELECT * FROM pets WHERE user_id = :uid ORDER BY created_at DESC');
-    $stmt->execute([':uid' => $userId]);
+    $stmt = $db->prepare('
+        SELECT p.* FROM pets p
+        WHERE p.user_id = :uid
+        AND p.id NOT IN (
+            SELECT s.pet_id FROM subscriptions s
+            WHERE s.user_id = :uid2 AND s.status = :status
+        )
+        ORDER BY p.created_at DESC
+    ');
+    $stmt->execute([':uid' => $userId, ':uid2' => $userId, ':status' => 'active']);
     $pets = $stmt->fetchAll();
 }
 

@@ -11,7 +11,7 @@
  */
 
 // ── Load .env (project root) so getenv() / $_ENV are populated ─
-$envFile = __DIR__ . '/../.env';
+$envFile = __DIR__ . '/../_env';
 if (is_file($envFile) && is_readable($envFile)) {
     $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     if ($lines !== false) {
@@ -100,6 +100,15 @@ define('GCP_PROCESSOR_NAMES', [
     'vet_report' => 'EXPENSE_PARSER',
     'other'      => 'RECEIPT_PARSER',
 ]);
+
+// ── reCAPTCHA ───────────────────────────────────────────────
+define('RECAPTCHA_SITE_KEY',   getenv('RECAPTCHA_SITE_KEY')   ?: '');
+define('RECAPTCHA_SECRET_KEY', getenv('RECAPTCHA_SECRET_KEY') ?: '');
+
+// ── Email Verification ──────────────────────────────────────
+define('VERIFICATION_MASTER_CODE', '000000');
+define('VERIFICATION_CODE_EXPIRY', 15); // minutes
+
 
 // ── AI Scanner Mode ─────────────────────────────────────────
 // 'mock'  = AIScannerMock (local dev, Phases 0-3, no GCP needed)
