@@ -11,7 +11,7 @@
  */
 
 // ── Load .env (project root) so getenv() / $_ENV are populated ─
-$envFile = __DIR__ . '/../_env';
+$envFile = __DIR__ . '/../.env';
 if (is_file($envFile) && is_readable($envFile)) {
     $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     if ($lines !== false) {
