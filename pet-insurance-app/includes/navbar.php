@@ -1,7 +1,7 @@
 <?php
 /**
  * includes/navbar.php
- * Bootstrap 5 responsive navbar.
+ * Bootstrap 5 responsive navbar with user dropdown.
  * Detects current page for active link highlighting.
  */
 $nav_script = basename($_SERVER['SCRIPT_NAME'] ?? '');
@@ -15,8 +15,6 @@ if ($nav_script === 'index.php' && strpos($nav_dir, 'dashboard') === false && st
     elseif ($nav_script === 'pricing.php') $nav_active = 'pricing';
     elseif ($nav_script === 'how-it-works.php') $nav_active = 'how-it-works';
     elseif ($nav_script === 'contact.php') $nav_active = 'contact';
-} elseif (strpos($nav_dir, 'dashboard') !== false && $nav_script === 'my-pets.php') {
-    $nav_active = 'my-pets';
 }
 ?>
 <nav class="navbar navbar-expand-lg pawshield-nav" aria-label="Main navigation">
@@ -56,37 +54,53 @@ if ($nav_script === 'index.php' && strpos($nav_dir, 'dashboard') === false && st
                 <li class="nav-item">
                     <a class="nav-link<?= $nav_active === 'contact' ? ' active' : '' ?>" href="<?= base_path() ?>/pages/contact.php">Contact</a>
                 </li>
-
-                <?php if (!empty($_SESSION['user_id'])): ?>
-                <!-- Logged-in only -->
-                <li class="nav-item">
-                    <a class="nav-link<?= $nav_active === 'my-pets' ? ' active' : '' ?>" href="<?= base_path() ?>/dashboard/my-pets.php">
-                        <i class="bi bi-heart-pulse me-1" aria-hidden="true"></i>My Pets
-                    </a>
-                </li>
-                <?php if (($_SESSION['user_role'] ?? '') === 'admin'): ?>
-                <li class="nav-item">
-                    <a class="nav-link text-warning" href="<?= base_path() ?>/admin/index.php">
-                        <i class="bi bi-shield-lock me-1" aria-hidden="true"></i>Admin
-                    </a>
-                </li>
-                <?php endif; ?>
-                <?php endif; ?>
             </ul>
 
-            <!-- Right: auth -->
+            <!-- Right: auth / user dropdown -->
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-2">
                 <?php if (!empty($_SESSION['user_id'])): ?>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= base_path() ?>/dashboard/profile.php">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-person-circle me-1" aria-hidden="true"></i>
                         <?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Account', ENT_QUOTES, 'UTF-8'); ?>
                     </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link btn btn-outline-light btn-sm px-3"
-                       href="<?= base_path() ?>/auth/logout.php"
-                       onclick="return confirm('Are you sure you want to log out?');">Log Out</a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="<?= base_path() ?>/dashboard/profile.php">
+                                <i class="bi bi-gear me-2"></i>Account Details
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="<?= base_path() ?>/dashboard/my-pets.php">
+                                <i class="bi bi-heart-pulse me-2"></i>My Pets
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="<?= base_path() ?>/pages/pricing.php">
+                                <i class="bi bi-shield-check me-2"></i>Purchase Policies
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="<?= base_path() ?>/dashboard/claims/index.php">
+                                <i class="bi bi-file-earmark-text me-2"></i>My Claims
+                            </a>
+                        </li>
+                        <?php if (($_SESSION['user_role'] ?? '') === 'admin'): ?>
+                        <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-warning" href="<?= base_path() ?>/admin/index.php">
+                                    <i class="bi bi-shield-lock me-2"></i>Admin Dashboard
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="<?= base_path() ?>/auth/logout.php">
+                                <i class="bi bi-box-arrow-right me-2"></i>Log Out
+                            </a>
+                        </li>
+                    </ul>
                 </li>
                 <?php else: ?>
                 <li class="nav-item">
