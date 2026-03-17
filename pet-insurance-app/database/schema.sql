@@ -18,6 +18,11 @@ CREATE TABLE IF NOT EXISTS users (
     first_name      VARCHAR(100) NOT NULL,
     last_name       VARCHAR(100) NOT NULL,
     phone           VARCHAR(20) DEFAULT NULL,
+    verification_code VARCHAR(6) DEFAULT NULL,
+    verification_expires DATETIME DEFAULT NULL,
+    reset_code VARCHAR(6) DEFAULT NULL,
+    reset_expires DATETIME DEFAULT NULL,
+
     -- STRIPE: Links the user to their Stripe Customer Profile
     stripe_customer_id VARCHAR(255) DEFAULT NULL, 
     role            ENUM('customer', 'admin') NOT NULL DEFAULT 'customer',
@@ -72,7 +77,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     plan_id         INT NOT NULL,
     -- STRIPE: The specific recurring subscription ID
     stripe_subscription_id VARCHAR(255) DEFAULT NULL,
-    status          ENUM('active', 'cancelled', 'expired', 'past_due') NOT NULL DEFAULT 'active',
+    status          ENUM('pending','active', 'cancelled', 'expired', 'past_due') NOT NULL DEFAULT 'active',
     start_date      DATE NOT NULL,
     end_date        DATE DEFAULT NULL,
 
@@ -162,6 +167,7 @@ CREATE TABLE IF NOT EXISTS quotes (
     clinic_verified TINYINT(1) NOT NULL DEFAULT 0,
     -- STRIPE: If you demo paying out a claim via Stripe Connect
     stripe_payout_id VARCHAR(255) DEFAULT NULL,
+    -- For email verification --
     status          ENUM('draft', 'pending_review', 'approved', 'rejected', 'paid') NOT NULL DEFAULT 'draft',
     generated_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     reviewed_at     DATETIME DEFAULT NULL,
@@ -199,4 +205,23 @@ CREATE TABLE IF NOT EXISTS contact (
     subject VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+
+-- ============================================
+-- PAYMENTS
+-- ============================================
+CREATE TABLE IF NOT EXISTS payment_methods (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    user_id         INT NOT NULL,
+    card_holder     VARCHAR(200) NOT NULL,
+    card_last_four  VARCHAR(4) NOT NULL,
+    card_brand      VARCHAR(50) DEFAULT 'Visa',
+    expiry_month    TINYINT NOT NULL,
+    expiry_year     SMALLINT NOT NULL,
+    is_default      TINYINT(1) NOT NULL DEFAULT 1,
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_pm_user (user_id)
 ) ENGINE=InnoDB;

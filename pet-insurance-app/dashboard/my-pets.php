@@ -7,20 +7,21 @@ require_once __DIR__ . '/../includes/sanitize.php';
 require_once __DIR__ . '/../auth/middleware.php';
 requireLogin();
 
+/** @var PDO $db */
+
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 if ($userId <= 0) {
     $_SESSION = [];
-    header('Location: ' . (defined('BASE_PATH') ? BASE_PATH : '') . '/auth/login.php');
+    header('Location: ' . BASE_PATH . '/auth/login.php');
     exit;
 }
 
-// Ensure the user still exists in DB (e.g. not deleted)
 if ($db instanceof PDO) {
     $stmt = $db->prepare('SELECT id FROM users WHERE id = :id LIMIT 1');
     $stmt->execute([':id' => $userId]);
     if (!$stmt->fetch()) {
         $_SESSION = [];
-        header('Location: ' . (defined('BASE_PATH') ? BASE_PATH : '') . '/auth/login.php');
+        header('Location: ' . BASE_PATH . '/auth/login.php');
         exit;
     }
 }
@@ -28,17 +29,20 @@ if ($db instanceof PDO) {
 $errors  = [];
 $success = '';
 
+if (!empty($_SESSION['flash_message'])) {
+    $success = $_SESSION['flash_message'];
+    unset($_SESSION['flash_message']);
+}
+
 $SPECIES = ['dog', 'cat', 'bird', 'rabbit', 'reptile', 'other'];
 
-// ── Helper: ownership check ──────────────────────────────────
 function getPetForUser(PDO $db, int $petId, int $userId): array|false {
     $stmt = $db->prepare('SELECT * FROM pets WHERE id = :pid AND user_id = :uid LIMIT 1');
     $stmt->execute([':pid' => $petId, ':uid' => $userId]);
     return $stmt->fetch();
 }
 
-// Prefer POST so form submit (action=update) wins over URL (action=edit)
-$action = inputString('action') ?? inputString('action', 'GET') ?? '';
+$action = inputString('action', 'GET') ?? inputString('action') ?? '';
 
 // ── DELETE ───────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'delete') {
@@ -49,13 +53,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'delete') {
         $stmt->execute([':id' => $petId, ':uid' => $userId]);
         $success = 'Pet removed.';
     }
-    $action = ''; // fall through to list view
+    $action = '';
 }
 
 // ── ADD ──────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'add') {
     requireValidCsrf();
-
     $name    = inputString('name');
     $species = inputString('species');
     $breed   = inputString('breed');
@@ -95,7 +98,6 @@ if ($action === 'edit') {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'update') {
     requireValidCsrf();
-
     $petId   = inputInt('pet_id');
     $editPet = $petId ? getPetForUser($db, $petId, $userId) : null;
 
@@ -135,182 +137,200 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'update') {
     }
 }
 
-// ── Fetch all pets for listing ────────────────────────────────
+// ── Fetch all pets ───────────────────────────────────────────
 $stmt = $db->prepare('SELECT * FROM pets WHERE user_id = :uid ORDER BY created_at DESC');
 $stmt->execute([':uid' => $userId]);
 $pets = $stmt->fetchAll();
 
-// Active subscriptions per pet (pet_id => plan name; one plan per pet for display)
-$planByPetId = [];
-if ($db instanceof PDO && !empty($pets)) {
+// Active subscriptions per pet with full plan details
+$subByPetId = [];
+if (!empty($pets)) {
     $stmt = $db->prepare('
-        SELECT s.pet_id, ip.name AS plan_name
+        SELECT s.pet_id, s.start_date, s.end_date, s.status,
+               ip.name AS plan_name, ip.monthly_premium, ip.annual_limit,
+               ip.deductible, ip.coverage_pct, ip.description AS plan_description
         FROM subscriptions s
         JOIN insurance_plans ip ON ip.id = s.plan_id
         WHERE s.user_id = :uid AND s.status = :status
     ');
     $stmt->execute([':uid' => $userId, ':status' => 'active']);
     while ($row = $stmt->fetch()) {
-        $planByPetId[(int) $row['pet_id']] = $row['plan_name'];
+        $subByPetId[(int) $row['pet_id']] = $row;
     }
 }
 
-$breadcrumb_items = [
-    ['Dashboard', base_path() . '/dashboard/my-pets.php'],
-    ['My Pets', ''],
-];
+function timeRemaining(string $endDate): array {
+    $now = new DateTime();
+    $end = new DateTime($endDate);
+
+    if ($end <= $now) {
+        return ['text' => 'Expired', 'days' => 0, 'expired' => true];
+    }
+
+    $diff = $now->diff($end);
+    $totalDays = (int) $now->diff($end)->format('%a');
+
+    $parts = [];
+    if ($diff->y > 0) $parts[] = $diff->y . ($diff->y === 1 ? ' year' : ' years');
+    if ($diff->m > 0) $parts[] = $diff->m . ($diff->m === 1 ? ' month' : ' months');
+    if ($diff->d > 0 && $diff->y === 0) $parts[] = $diff->d . ($diff->d === 1 ? ' day' : ' days');
+
+    return [
+        'text'    => implode(', ', $parts) . ' remaining',
+        'days'    => $totalDays,
+        'expired' => false,
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Pets — PawShield Pet Insurance</title>
+    <title>My Pets — PawShield</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= base_path() ?>/assets/css/style.css">
     <link rel="stylesheet" href="<?= base_path() ?>/assets/css/accessibility.css">
 </head>
 <body>
 
-<a class="skip-link" href="#main-content">Skip to main content</a>
-
 <?php require_once __DIR__ . '/../includes/navbar.php'; ?>
 
-<main id="main-content">
-    <!-- Hero -->
-    <section class="hero-section hero-section--short" aria-labelledby="mypets-hero-heading">
-        <div class="hero-bg-shapes" aria-hidden="true">
-            <div class="hero-shape hero-shape-1"></div>
-            <div class="hero-shape hero-shape-2"></div>
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Pets</h2>
+        <a href="?action=add" class="btn btn-success">+ Add Pet</a>
+    </div>
+
+    <?php if ($success): ?>
+        <div class="alert alert-success"><?= esc($success) ?></div>
+    <?php endif; ?>
+
+    <?php if ($action === 'add' || ($action === 'update' && $errors)): ?>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5>Add a New Pet</h5>
+            <?= renderPetForm($errors, [], 'add', $SPECIES) ?>
         </div>
-        <div class="container hero-content">
-            <div class="row justify-content-center text-center">
-                <div class="col-lg-8">
-                    <span class="hero-badge">
-                        <i class="bi bi-heart-pulse me-1" aria-hidden="true"></i>Dashboard
-                    </span>
-                    <h1 id="mypets-hero-heading" class="hero-heading">My Pets</h1>
-                    <p class="hero-subtitle mb-0 text-center mx-auto" style="max-width: 32rem;">
-                        Manage your pets and get them covered with a plan that fits.
-                    </p>
-                </div>
-            </div>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($editPet || ($action === 'update' && $errors && $editPet)): ?>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5>Edit Pet</h5>
+            <?= renderPetForm($errors, $editPet, 'update', $SPECIES) ?>
         </div>
-    </section>
+    </div>
+    <?php endif; ?>
 
-    <section class="py-6">
-        <div class="container">
-            <?php require_once __DIR__ . '/../includes/breadcrumb.php'; ?>
-            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3 mb-4 mt-3">
-                <h2 class="h4 mb-0" style="color: var(--ps-navy);">Your pets</h2>
-                <a href="?action=add" class="btn btn-success">
-                    <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>Add Pet
-                </a>
-            </div>
-
-            <?php if ($success): ?>
-                <div class="alert alert-success"><?= esc($success) ?></div>
-            <?php endif; ?>
-
-            <?php if ($action === 'add' || ($action === 'update' && $errors)): ?>
-            <div class="card border-0 shadow-sm mb-4 my-pets-form-card">
-                <div class="card-body p-4 p-lg-5">
-                    <h3 class="h5 mb-4" style="color: var(--ps-navy);">Add a New Pet</h3>
-                    <?= renderPetForm($errors, [], 'add', $SPECIES) ?>
-                </div>
-            </div>
-            <?php endif; ?>
-
-            <?php if ($editPet || ($action === 'update' && $errors && $editPet)): ?>
-            <div class="card border-0 shadow-sm mb-4 my-pets-form-card">
-                <div class="card-body p-4 p-lg-5">
-                    <h3 class="h5 mb-4" style="color: var(--ps-navy);">Edit Pet</h3>
-                    <?= renderPetForm($errors, $editPet, 'update', $SPECIES) ?>
-                </div>
-            </div>
-            <?php endif; ?>
-
-            <?php if (empty($pets)): ?>
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-5 text-center">
-                        <i class="bi bi-heart text-muted d-block mb-3" style="font-size: 3rem;" aria-hidden="true"></i>
-                        <p class="text-muted mb-4">You haven't added any pets yet.</p>
-                        <a href="?action=add" class="btn btn-primary">
-                            <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>Add your first pet
-                        </a>
+    <?php if (empty($pets)): ?>
+        <p class="text-muted">You haven't added any pets yet.</p>
+    <?php else: ?>
+        <?php foreach ($pets as $pet): ?>
+            <?php
+            $sub = $subByPetId[(int)$pet['id']] ?? null;
+            $remaining = ($sub && !empty($sub['end_date'])) ? timeRemaining($sub['end_date']) : null;
+            ?>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="mb-1"><?= esc($pet['name']) ?></h5>
+                            <p class="text-muted small mb-0">
+                                <?= esc(ucfirst($pet['species'])) ?>
+                                <?= $pet['breed'] ? ' · ' . esc($pet['breed']) : '' ?>
+                                <?= $pet['date_of_birth'] ? ' · Born ' . esc($pet['date_of_birth']) : '' ?>
+                                <?= $pet['microchip_id'] ? ' · Chip: ' . esc($pet['microchip_id']) : '' ?>
+                            </p>
+                        </div>
+                        <div class="d-flex gap-1">
+                            <a href="?action=edit&pet_id=<?= (int)$pet['id'] ?>"
+                               class="btn btn-sm btn-outline-primary">Edit</a>
+                            <form method="POST" class="d-inline"
+                                  onsubmit="return confirm('Delete <?= esc($pet['name']) ?>?')">
+                                <?php csrfField(); ?>
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="pet_id" value="<?= (int)$pet['id'] ?>">
+                                <button class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            <?php else: ?>
-            <div class="card border-0 shadow-sm my-pets-table-card">
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 my-pets-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Species</th>
-                                    <th>Breed</th>
-                                    <th>Date of Birth</th>
-                                    <th>Microchip ID</th>
-                                    <th>Plan</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            <?php foreach ($pets as $pet): ?>
-                                <tr>
-                                    <td>
-                                        <span class="pet-species-icon me-2" aria-hidden="true" title="<?= esc(ucfirst($pet['species'])) ?>">
-                                            <?php if (strtolower($pet['species']) === 'dog'): ?>
-                                                <i class="bi bi-star-fill text-teal"></i>
-                                            <?php elseif (strtolower($pet['species']) === 'cat'): ?>
-                                                <i class="bi bi-heart-fill text-teal"></i>
-                                            <?php else: ?>
-                                                <i class="bi bi-circle-fill text-teal"></i>
-                                            <?php endif; ?>
-                                        </span>
-                                        <strong><?= esc($pet['name']) ?></strong>
-                                    </td>
-                                    <td><?= esc(ucfirst($pet['species'])) ?></td>
-                                    <td><?= esc($pet['breed'] ?? '—') ?></td>
-                                    <td><?= esc($pet['date_of_birth'] ?? '—') ?></td>
-                                    <td><?= esc($pet['microchip_id'] ?? '—') ?></td>
-                                    <td><?= isset($planByPetId[(int)$pet['id']]) ? esc($planByPetId[(int)$pet['id']]) : '—' ?></td>
-                                    <td>
-                                        <div class="d-flex flex-wrap gap-1">
-                                            <a href="?action=edit&pet_id=<?= (int)$pet['id'] ?>"
-                                               class="btn btn-sm btn-outline-primary">Edit</a>
-                                            <form method="POST" class="d-inline"
-                                                  onsubmit="return confirm('Delete <?= esc($pet['name']) ?>?')">
-                                                <?= csrfField() ?>
-                                                <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="pet_id" value="<?= (int)$pet['id'] ?>">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                                            </form>
-                                            <a href="<?= base_path() ?>/dashboard/subscriptions/review-and-pay.php?pet_id=<?= (int)$pet['id'] ?>"
-                                               class="btn btn-sm btn-primary">
-                                                Get coverage
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
+
+                    <?php if ($sub): ?>
+                        <!-- Policy details -->
+                        <hr class="my-3">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="badge bg-success"><?= esc($sub['plan_name']) ?> Plan</span>
+                                    <?php if ($remaining && !$remaining['expired']): ?>
+                                        <?php if ($remaining['days'] <= 30): ?>
+                                            <span class="badge bg-warning text-dark">Expiring soon</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-primary">Active</span>
+                                        <?php endif; ?>
+                                    <?php elseif ($remaining && $remaining['expired']): ?>
+                                        <span class="badge bg-danger">Expired</span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="small">
+                                    <div class="mb-1">
+                                        <i class="bi bi-clock me-1 text-muted"></i>
+                                        <strong><?= esc($remaining['text'] ?? 'N/A') ?></strong>
+                                    </div>
+                                    <div class="text-muted">
+                                        <i class="bi bi-calendar-range me-1"></i>
+                                        <?= esc(date('d M Y', strtotime($sub['start_date']))) ?>
+                                        — <?= esc(date('d M Y', strtotime($sub['end_date']))) ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="small">
+                                    <div class="mb-1">
+                                        <i class="bi bi-cash me-1 text-muted"></i>
+                                        <strong>$<?= number_format((float)$sub['monthly_premium'], 2) ?></strong>/month
+                                    </div>
+                                    <div class="mb-1">
+                                        <i class="bi bi-shield-check me-1 text-muted"></i>
+                                        <?= number_format((float)$sub['coverage_pct']) ?>% coverage
+                                        · $<?= number_format((float)$sub['deductible']) ?> deductible
+                                    </div>
+                                    <div>
+                                        <i class="bi bi-graph-up me-1 text-muted"></i>
+                                        Up to $<?= number_format((float)$sub['annual_limit']) ?> annual limit
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <?php if ($remaining && $remaining['days'] <= 30): ?>
+                            <div class="mt-3">
+                                <a href="<?= base_path() ?>/dashboard/subscriptions/purchase-coverage.php?pet_id=<?= (int)$pet['id'] ?>"
+                                   class="btn btn-sm btn-warning">
+                                    <i class="bi bi-arrow-repeat me-1"></i>Renew Coverage
+                                </a>
+                            </div>
+                        <?php endif; ?>
+
+                    <?php else: ?>
+                        <!-- No policy -->
+                        <hr class="my-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="text-muted small"><i class="bi bi-shield-x me-1"></i>No active policy</span>
+                            <a href="<?= base_path() ?>/dashboard/subscriptions/review-and-pay.php?pet_id=<?= (int)$pet['id'] ?>"
+                               class="btn btn-sm btn-success">
+                                <i class="bi bi-shield-check me-1"></i>Get Coverage
+                            </a>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
-            <?php endif; ?>
-        </div>
-    </section>
-</main>
-
-<script src="<?= base_path() ?>/assets/js/inline-validation.js"></script>
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</div>
 
 <?php
 function renderPetForm(array $errors, array $pet, string $action, array $species): string {
@@ -324,15 +344,15 @@ function renderPetForm(array $errors, array $pet, string $action, array $species
     }
     ob_start(); ?>
     <form method="POST" novalidate>
-        <?= csrfField() ?>
+        <?php csrfField(); ?>
         <input type="hidden" name="action" value="<?= esc($action) ?>">
         <?= $hiddenId ?>
         <div class="row g-3">
             <div class="col-md-6">
-                <label class="form-label" for="pet_name">Name *</label>
-                <input type="text" name="name" id="pet_name"
+                <label class="form-label">Name *</label>
+                <input type="text" name="name"
                        class="form-control <?= isset($errors['name']) ? 'is-invalid' : '' ?>"
-                       value="<?= esc($pet['name'] ?? '') ?>" required autofocus>
+                       value="<?= esc($pet['name'] ?? '') ?>" required>
                 <div class="invalid-feedback"><?= esc($errors['name'] ?? '') ?></div>
             </div>
             <div class="col-md-6">
@@ -352,9 +372,8 @@ function renderPetForm(array $errors, array $pet, string $action, array $species
                 <label class="form-label">Date of Birth</label>
                 <input type="date" name="date_of_birth"
                        class="form-control <?= isset($errors['dob']) ? 'is-invalid' : '' ?>"
-                       value="<?= esc($pet['date_of_birth'] ?? '') ?>"
-                       data-inline-validate="dob">
-                <div class="invalid-feedback" data-inline-feedback><?= esc($errors['dob'] ?? '') ?></div>
+                       value="<?= esc($pet['date_of_birth'] ?? '') ?>">
+                <div class="invalid-feedback"><?= esc($errors['dob'] ?? '') ?></div>
             </div>
             <div class="col-md-3">
                 <label class="form-label">Microchip ID</label>
@@ -372,5 +391,5 @@ function renderPetForm(array $errors, array $pet, string $action, array $species
     <?php return ob_get_clean();
 }
 ?>
-</body>
-</html>
+
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

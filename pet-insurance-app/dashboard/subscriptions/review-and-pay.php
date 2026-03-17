@@ -8,13 +8,15 @@ require_once __DIR__ . '/../../auth/middleware.php';
 
 requireLogin();
 
+/** @var PDO $db */
+
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 $errors = [];
 
 $selectedPlanId = inputInt('plan_id', 'GET');
 $selectedPetId  = inputInt('pet_id', 'GET');
 
-// Load user's pets
+// Load user's pets WITHOUT active/pending subscriptions
 $pets = [];
 if ($db instanceof PDO) {
     $stmt = $db->prepare('
@@ -22,11 +24,11 @@ if ($db instanceof PDO) {
         WHERE p.user_id = :uid
         AND p.id NOT IN (
             SELECT s.pet_id FROM subscriptions s
-            WHERE s.user_id = :uid2 AND s.status = :status
+            WHERE s.user_id = :uid2 AND s.status IN (:s1)
         )
         ORDER BY p.created_at DESC
     ');
-    $stmt->execute([':uid' => $userId, ':uid2' => $userId, ':status' => 'active']);
+    $stmt->execute([':uid' => $userId, ':uid2' => $userId, ':s1' => 'active']);
     $pets = $stmt->fetchAll();
 }
 
@@ -37,159 +39,238 @@ if ($db instanceof PDO) {
     $plans = $stmt->fetchAll();
 }
 
-// Helper lookups
 function findById(array $list, int $id): ?array {
     foreach ($list as $item) {
-        if ((int) $item['id'] === $id) {
-            return $item;
-        }
+        if ((int) $item['id'] === $id) return $item;
     }
     return null;
 }
 
 $selectedPlan = $selectedPlanId ? findById($plans, $selectedPlanId) : null;
 $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
-
-$breadcrumb_items = [
-    ['My Pets', base_path() . '/dashboard/my-pets.php'],
-    ['Review & Pay', ''],
-];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Review &amp; Pay — PawShield Pet Insurance</title>
+    <title>Review &amp; Pay — PawShield</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="<?= esc(generateCsrfToken()); ?>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= base_path() ?>/assets/css/style.css">
     <link rel="stylesheet" href="<?= base_path() ?>/assets/css/accessibility.css">
 </head>
 <body>
 
-<a class="skip-link" href="#main-content">Skip to main content</a>
-
 <?php require_once __DIR__ . '/../../includes/navbar.php'; ?>
 
 <main id="main-content">
-    <!-- Hero -->
-    <section class="hero-section hero-section--short" aria-labelledby="review-hero-heading">
-        <div class="hero-bg-shapes" aria-hidden="true">
-            <div class="hero-shape hero-shape-1"></div>
-            <div class="hero-shape hero-shape-2"></div>
-        </div>
-        <div class="container hero-content">
-            <div class="row justify-content-center text-center">
-                <div class="col-lg-8">
-                    <span class="hero-badge">
-                        <i class="bi bi-credit-card me-1" aria-hidden="true"></i>Checkout
-                    </span>
-                    <h1 id="review-hero-heading" class="hero-heading">Review &amp; Pay</h1>
-                    <p class="hero-subtitle mb-0 text-center mx-auto" style="max-width: 32rem;">
-                        Choose your pet and plan, then we’ll send you to secure Stripe checkout.
+<div class="container py-5" style="max-width: 960px;">
+
+    <a href="<?= base_path() ?>/dashboard/my-pets.php" class="btn btn-outline-secondary btn-sm mb-4">
+        <i class="bi bi-arrow-left me-1"></i> Back to My Pets
+    </a>
+
+    <h1 class="mb-2"><i class="bi bi-shield-check me-2"></i>Review &amp; Pay</h1>
+    <p class="text-muted mb-4">
+        Choose your pet, pick a plan and duration, then proceed to secure Stripe checkout.
+    </p>
+
+    <form id="review-pay-form" data-checkout-api="<?= esc(base_path() . '/api/create-checkout-session.php') ?>">
+        <?= csrfField() ?>
+
+        <!-- Step 1: Choose Pet -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-heart-pulse me-2"></i>1. Choose Pet</h5>
+                <?php if (empty($pets)): ?>
+                    <p class="text-muted">
+                        All your pets already have coverage, or you haven't added any pets yet.
+                        <a href="<?= base_path() ?>/dashboard/my-pets.php">Manage pets</a>.
                     </p>
-                </div>
+                <?php else: ?>
+                    <select name="pet_id" id="pet_id" class="form-select" required>
+                        <option value="">— Select a pet —</option>
+                        <?php foreach ($pets as $pet): ?>
+                            <option value="<?= (int)$pet['id'] ?>"
+                                <?= $selectedPet && (int)$selectedPet['id'] === (int)$pet['id'] ? 'selected' : '' ?>>
+                                <?= esc($pet['name']) ?> (<?= esc(ucfirst($pet['species'])) ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php endif; ?>
             </div>
         </div>
-    </section>
 
-    <section class="py-6">
-        <div class="container">
-            <?php require_once __DIR__ . '/../../includes/breadcrumb.php'; ?>
-            <div class="row justify-content-center mt-3">
-                <div class="col-xl-8 col-lg-9">
-                    <form id="review-pay-form" class="card border-0 shadow-sm review-pay-card" data-checkout-api="<?= esc(base_path() . '/api/create-checkout-session.php') ?>">
-                        <div class="card-body p-4 p-lg-5">
-                            <?= csrfField() ?>
-
-                            <div class="review-pay-step mb-4">
-                                <span class="review-pay-step-num" aria-hidden="true">1</span>
-                                <div>
-                                    <h2 class="h5 mb-2" style="color: var(--ps-navy);">Choose pet</h2>
-                                    <?php if (empty($pets)): ?>
-                                        <p class="text-muted mb-0">
-                                            You don't have any pets yet. <a href="<?= base_path() ?>/dashboard/my-pets.php">Add a pet first</a>.
-                                        </p>
-                                    <?php else: ?>
-                                        <select name="pet_id" id="pet_id" class="form-select form-select-lg" required>
-                                            <option value="">— Select a pet —</option>
-                                            <?php foreach ($pets as $pet): ?>
-                                                <option value="<?= (int)$pet['id'] ?>"
-                                                    <?= $selectedPet && (int)$selectedPet['id'] === (int)$pet['id'] ? 'selected' : '' ?>>
-                                                    <?= esc($pet['name']) ?> (<?= esc(ucfirst($pet['species'])) ?>)
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    <?php endif; ?>
+        <!-- Step 2: Choose Plan (cards like purchase-coverage) -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-shield me-2"></i>2. Choose Plan</h5>
+                <?php if (empty($plans)): ?>
+                    <p class="text-muted">No active plans configured.</p>
+                <?php else: ?>
+                    <div class="row g-3">
+                        <?php
+                        $planIcons = ['bi-shield', 'bi-shield-fill-check', 'bi-shield-fill-plus'];
+                        foreach ($plans as $i => $plan):
+                            $isSelected = $selectedPlan && (int)$selectedPlan['id'] === (int)$plan['id'];
+                        ?>
+                        <div class="col-md-4">
+                            <div class="card h-100 plan-select-card <?= $isSelected ? 'border-primary shadow' : '' ?>"
+                                 style="cursor: pointer;"
+                                 onclick="selectPlan(<?= (int)$plan['id'] ?>, this)">
+                                <div class="card-body text-center">
+                                    <i class="bi <?= $planIcons[$i] ?? 'bi-shield' ?> fs-2 text-primary mb-2 d-block"></i>
+                                    <h5 class="card-title"><?= esc($plan['name']) ?></h5>
+                                    <div class="mb-2">
+                                        <span class="fs-3 fw-bold">$<?= number_format((float)$plan['monthly_premium'], 2) ?></span>
+                                        <span class="text-muted">/mo</span>
+                                    </div>
+                                    <ul class="list-unstyled small text-start">
+                                        <li><i class="bi bi-check-circle-fill text-success me-1"></i>
+                                            Up to $<?= number_format((float)$plan['annual_limit']) ?> annual limit</li>
+                                        <li><i class="bi bi-check-circle-fill text-success me-1"></i>
+                                            <?= number_format((float)$plan['coverage_pct']) ?>% coverage</li>
+                                        <li><i class="bi bi-check-circle-fill text-success me-1"></i>
+                                            $<?= number_format((float)$plan['deductible']) ?> deductible</li>
+                                    </ul>
+                                    <p class="text-muted small mt-2 mb-0"><?= esc($plan['description']) ?></p>
                                 </div>
                             </div>
-
-                            <div class="review-pay-step mb-4">
-                                <span class="review-pay-step-num" aria-hidden="true">2</span>
-                                <div>
-                                    <h2 class="h5 mb-3" style="color: var(--ps-navy);">Choose plan</h2>
-                                    <?php if (empty($plans)): ?>
-                                        <p class="text-muted mb-0">No active plans configured.</p>
-                                    <?php else: ?>
-                                        <div class="review-pay-plans">
-                                            <?php foreach ($plans as $plan): ?>
-                                                <?php $isSelected = $selectedPlan && (int)$selectedPlan['id'] === (int)$plan['id']; ?>
-                                                <label class="review-pay-plan-option <?= $isSelected ? 'review-pay-plan-option--selected' : '' ?>">
-                                                    <input type="radio" name="plan_id" value="<?= (int)$plan['id'] ?>"
-                                                        id="plan_<?= (int)$plan['id'] ?>"
-                                                        class="form-check-input" <?= $isSelected ? 'checked' : '' ?> required>
-                                                    <span class="review-pay-plan-text">
-                                                        <strong><?= esc($plan['name']) ?></strong>
-                                                        — $<?= number_format((float)$plan['monthly_premium'], 2) ?>/mo,
-                                                        up to $<?= number_format((float)$plan['annual_limit']) ?>
-                                                        with <?= number_format((float)$plan['coverage_pct']) ?>% coverage
-                                                        and $<?= number_format((float)$plan['deductible']) ?> deductible
-                                                    </span>
-                                                </label>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-
-                            <div class="review-pay-step mb-4">
-                                <span class="review-pay-step-num" aria-hidden="true">3</span>
-                                <div>
-                                    <h2 class="h5 mb-2" style="color: var(--ps-navy);">Summary</h2>
-                                    <p class="small text-muted mb-2">You can change your selection above before paying. Stripe will handle your card securely.</p>
-                                    <div id="review-summary" class="small p-3 rounded" style="background: var(--ps-off-white); color: var(--ps-navy);"></div>
-                                </div>
-                            </div>
-
-                            <hr class="my-4">
-
-                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3">
-                                <a href="<?= base_path() ?>/dashboard/my-pets.php" class="btn btn-outline-secondary">
-                                    <i class="bi bi-arrow-left me-2" aria-hidden="true"></i>Back to My Pets
-                                </a>
-                                <button type="submit" class="btn btn-primary px-4" id="confirm-pay-btn">
-                                    Confirm and Pay <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
-                                </button>
-                            </div>
-
-                            <div class="mt-3 small text-danger" id="review-error" style="display:none;"></div>
                         </div>
-                    </form>
+                        <?php endforeach; ?>
+                    </div>
+                    <input type="hidden" name="plan_id" id="selectedPlanId"
+                           value="<?= $selectedPlan ? (int)$selectedPlan['id'] : '' ?>">
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Step 3: Choose Duration -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-calendar-event me-2"></i>3. Choose Duration</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-check border rounded p-3">
+                            <input class="form-check-input" type="radio" name="duration" id="dur1" value="1">
+                            <label class="form-check-label w-100" for="dur1">
+                                <strong>1 Month</strong>
+                                <span class="text-muted d-block small">Try it out</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check border rounded p-3">
+                            <input class="form-check-input" type="radio" name="duration" id="dur6" value="6">
+                            <label class="form-check-label w-100" for="dur6">
+                                <strong>6 Months</strong>
+                                <span class="text-muted d-block small">Most flexible</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check border rounded p-3">
+                            <input class="form-check-input" type="radio" name="duration" id="dur12" value="12" checked>
+                            <label class="form-check-label w-100" for="dur12">
+                                <strong>12 Months</strong>
+                                <span class="text-muted d-block small">Best value</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </section>
+
+        <!-- Step 4: Summary -->
+        <div class="card border-primary mb-4" id="summaryCard" style="display:none;">
+            <div class="card-body">
+                <h5><i class="bi bi-receipt me-2"></i>4. Order Summary</h5>
+                <table class="table table-borderless mb-3">
+                    <tr><td class="text-muted">Pet</td><td class="fw-semibold" id="summaryPet">—</td></tr>
+                    <tr><td class="text-muted">Plan</td><td class="fw-semibold" id="summaryPlan">—</td></tr>
+                    <tr><td class="text-muted">Duration</td><td class="fw-semibold" id="summaryDuration">12 months</td></tr>
+                    <tr><td class="text-muted">Monthly cost</td><td class="fw-semibold" id="summaryMonthly">—</td></tr>
+                    <tr class="border-top"><td class="text-muted fw-bold">Total</td><td class="fw-bold fs-5 text-primary" id="summaryTotal">—</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg w-100" id="confirm-pay-btn" disabled>
+            <i class="bi bi-lock me-2"></i>Confirm and Pay
+        </button>
+
+        <div class="mt-3 small text-danger" id="review-error" style="display:none;"></div>
+    </form>
+
+</div>
 </main>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="<?= base_path() ?>/assets/js/review-pay.js"></script>
-</body>
-</html>
+<script>
+    const plans = <?= json_encode(array_map(function($p) {
+        return [
+            'id' => (int)$p['id'],
+            'name' => $p['name'],
+            'monthly_premium' => (float)$p['monthly_premium'],
+        ];
+    }, $plans)) ?>;
 
+    let selectedPlanId = document.getElementById('selectedPlanId')
+        ? (document.getElementById('selectedPlanId').value ? parseInt(document.getElementById('selectedPlanId').value) : null)
+        : null;
+
+    function selectPlan(planId, cardEl) {
+        selectedPlanId = planId;
+        if (document.getElementById('selectedPlanId')) {
+            document.getElementById('selectedPlanId').value = planId;
+        }
+        document.querySelectorAll('.plan-select-card').forEach(c => {
+            c.classList.remove('border-primary', 'shadow');
+        });
+        cardEl.classList.add('border-primary', 'shadow');
+        updateSummary();
+    }
+
+    function getSelectedDuration() {
+        const checked = document.querySelector('input[name="duration"]:checked');
+        return checked ? parseInt(checked.value) : 12;
+    }
+
+    function getSelectedPetName() {
+        const sel = document.getElementById('pet_id');
+        if (!sel || !sel.value) return null;
+        return sel.options[sel.selectedIndex].textContent.trim();
+    }
+
+    function updateSummary() {
+        const plan = plans.find(p => p.id === selectedPlanId);
+        const duration = getSelectedDuration();
+        const petName = getSelectedPetName();
+        const card = document.getElementById('summaryCard');
+        const btn = document.getElementById('confirm-pay-btn');
+
+        if (!plan || !petName) {
+            card.style.display = 'none';
+            btn.disabled = true;
+            return;
+        }
+
+        card.style.display = 'block';
+        btn.disabled = false;
+
+        document.getElementById('summaryPet').textContent = petName;
+        document.getElementById('summaryPlan').textContent = plan.name;
+        document.getElementById('summaryDuration').textContent = duration + (duration === 1 ? ' month' : ' months');
+        document.getElementById('summaryMonthly').textContent = '$' + plan.monthly_premium.toFixed(2);
+        document.getElementById('summaryTotal').textContent = '$' + (plan.monthly_premium * duration).toFixed(2);
+    }
+
+    document.querySelectorAll('input[name="duration"]').forEach(r => r.addEventListener('change', updateSummary));
+    const petSelect = document.getElementById('pet_id');
+    if (petSelect) petSelect.addEventListener('change', updateSummary);
+    if (selectedPlanId) updateSummary();
+</script>
+<script src="<?= base_path() ?>/assets/js/review-pay.js"></script>
