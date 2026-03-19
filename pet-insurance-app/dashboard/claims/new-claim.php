@@ -18,28 +18,50 @@ requireLogin();
 $userId  = (int) ($_SESSION['user_id'] ?? 0);
 $errors  = [];
 $success = '';
+$claimId = null;
 
-// Load user's pets with active subscriptions (can only claim on active policies)
-$petsWithPolicies = [];
-try {
+// Check if continuing a draft claim
+$continueDraft = inputInt('continue', 'GET');
+if ($continueDraft) {
     $stmt = $db->prepare('
-        SELECT p.id AS pet_id, p.name AS pet_name, p.species,
-               s.id AS subscription_id, ip.name AS plan_name
-        FROM pets p
-        JOIN subscriptions s ON s.pet_id = p.id AND s.user_id = p.user_id AND s.status = :status
+        SELECT c.*, p.name AS pet_name, p.species, ip.name AS plan_name
+        FROM claims c
+        JOIN pets p ON p.id = c.pet_id
+        JOIN subscriptions s ON s.id = c.subscription_id
         JOIN insurance_plans ip ON ip.id = s.plan_id
-        WHERE p.user_id = :uid
-        ORDER BY p.name ASC
+        WHERE c.id = :id AND c.user_id = :uid AND c.status = :status
+        LIMIT 1
     ');
-    $stmt->execute([':uid' => $userId, ':status' => 'active']);
-    $petsWithPolicies = $stmt->fetchAll();
-} catch (Throwable $e) {
-    error_log('new-claim: failed loading pets/subscriptions: ' . $e->getMessage());
+    $stmt->execute([':id' => $continueDraft, ':uid' => $userId, ':status' => 'draft']);
+    $draftClaim = $stmt->fetch();
+    if ($draftClaim) {
+        $claimId = (int) $draftClaim['id'];
+        $success = 'Continuing draft claim ' . esc($draftClaim['reference_id']) . '. Upload your receipt below.';
+    }
 }
 
-// Handle form submission (create draft claim)
-$claimId = null;
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// Load user's pets with active subscriptions (only needed if no claim yet)
+$petsWithPolicies = [];
+if (!$claimId) {
+    try {
+        $stmt = $db->prepare('
+            SELECT p.id AS pet_id, p.name AS pet_name, p.species,
+                   s.id AS subscription_id, ip.name AS plan_name
+            FROM pets p
+            JOIN subscriptions s ON s.pet_id = p.id AND s.user_id = p.user_id AND s.status = :status
+            JOIN insurance_plans ip ON ip.id = s.plan_id
+            WHERE p.user_id = :uid
+            ORDER BY p.name ASC
+        ');
+        $stmt->execute([':uid' => $userId, ':status' => 'active']);
+        $petsWithPolicies = $stmt->fetchAll();
+    } catch (Throwable $e) {
+        error_log('new-claim: failed loading pets/subscriptions: ' . $e->getMessage());
+    }
+}
+
+// Handle form submission (only if not continuing a draft)
+if (!$claimId && $_SERVER['REQUEST_METHOD'] === 'POST') {
     requireValidCsrf();
 
     $subscriptionId = inputInt('subscription_id');
@@ -49,7 +71,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['subscription_id'] = 'Please select a pet and policy.';
     }
 
-    // Verify subscription belongs to user and find pet_id
     $selectedSub = null;
     if ($subscriptionId) {
         foreach ($petsWithPolicies as $pp) {
@@ -79,7 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':status'      => 'draft',
             ]);
             $claimId = (int) $db->lastInsertId();
-            $success = 'Claim created! Now upload your vet receipt below.';
+            header('Location: ' . BASE_PATH . '/dashboard/claims/new-claim.php?continue=' . $claimId);
+            exit;
         } catch (Throwable $e) {
             error_log('new-claim: failed creating claim: ' . $e->getMessage());
             $errors['general'] = 'Could not create claim. Please try again.';

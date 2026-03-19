@@ -15,8 +15,22 @@ requireLogin();
 /** @var PDO $db */
 
 $userId = (int) ($_SESSION['user_id'] ?? 0);
+$success = '';
 
-// Fetch all claims for this user
+// Handle delete — MUST be before fetching claims
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_claim') {
+    requireValidCsrf();
+    $deleteId = inputInt('claim_id');
+    if ($deleteId) {
+        $stmt = $db->prepare('DELETE FROM claims WHERE id = :id AND user_id = :uid AND status = :status');
+        $stmt->execute([':id' => $deleteId, ':uid' => $userId, ':status' => 'draft']);
+        if ($stmt->rowCount() > 0) {
+            $success = 'Draft claim deleted.';
+        }
+    }
+}
+
+// Fetch all claims AFTER any deletions
 $stmt = $db->prepare('
     SELECT c.*, p.name AS pet_name, p.species,
            ip.name AS plan_name,
@@ -45,6 +59,7 @@ function claimStatusBadge(string $status): string {
     $cls = $map[$status] ?? 'bg-secondary';
     return '<span class="badge ' . $cls . '">' . htmlspecialchars(ucfirst($status), ENT_QUOTES, 'UTF-8') . '</span>';
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -70,6 +85,9 @@ function claimStatusBadge(string $status): string {
             <i class="bi bi-plus-circle me-1"></i>New Claim
         </a>
     </div>
+    <?php if ($success): ?>
+        <div class="alert alert-success"><?= esc($success) ?></div>
+    <?php endif; ?>
 
     <?php if (empty($claims)): ?>
         <div class="card border-0 shadow-sm">
@@ -111,10 +129,27 @@ function claimStatusBadge(string $status): string {
                             <p class="small text-muted mt-1 mb-0"><?= esc($c['description']) ?></p>
                         <?php endif; ?>
                     </div>
-                    <a href="<?= base_path() ?>/dashboard/claims/view-claim.php?id=<?= (int)$c['id'] ?>"
-                       class="btn btn-sm btn-outline-primary">
-                        View <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
+                    <div class="d-flex gap-2">
+                        <?php if ($c['status'] === 'draft'): ?>
+                            <a href="<?= base_path() ?>/dashboard/claims/new-claim.php?continue=<?= (int)$c['id'] ?>"
+                               class="btn btn-sm btn-success">
+                                Continue <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                            <form method="POST" class="d-inline"
+                                  onsubmit="return confirm('Delete this draft claim?')">
+                                <?php csrfField(); ?>
+                                <input type="hidden" name="action" value="delete_claim">
+                                <input type="hidden" name="claim_id" value="<?= (int)$c['id'] ?>">
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        <?php endif; ?>
+                        <a href="<?= base_path() ?>/dashboard/claims/view-claim.php?id=<?= (int)$c['id'] ?>"
+                           class="btn btn-sm btn-outline-primary">
+                            View <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

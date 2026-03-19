@@ -17,18 +17,21 @@ $selectedPlanId = inputInt('plan_id', 'GET');
 $selectedPetId  = inputInt('pet_id', 'GET');
 
 // Load user's pets WITHOUT active/pending subscriptions
+// Load user's pets WITHOUT active subscriptions (or with subscriptions expiring within 30 days)
+// Load user's pets that are eligible for purchase/renewal
 $pets = [];
 if ($db instanceof PDO) {
     $stmt = $db->prepare('
-        SELECT p.* FROM pets p
-        WHERE p.user_id = :uid
-        AND p.id NOT IN (
-            SELECT s.pet_id FROM subscriptions s
-            WHERE s.user_id = :uid2 AND s.status IN (:s1)
+        SELECT DISTINCT p.* FROM pets p
+        LEFT JOIN subscriptions s ON s.pet_id = p.id AND s.user_id = p.user_id AND s.status = ?
+        WHERE p.user_id = ?
+        AND (
+            s.id IS NULL
+            OR (s.end_date IS NOT NULL AND s.end_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY))
         )
         ORDER BY p.created_at DESC
     ');
-    $stmt->execute([':uid' => $userId, ':uid2' => $userId, ':s1' => 'active']);
+    $stmt->execute(['active', $userId]);
     $pets = $stmt->fetchAll();
 }
 
@@ -147,7 +150,7 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
             </div>
         </div>
 
-        <!-- Step 3: Choose Duration -->
+       <!-- Step 3: Choose Duration -->
         <div class="card mb-4">
             <div class="card-body">
                 <h5 class="mb-3"><i class="bi bi-calendar-event me-2"></i>3. Choose Duration</h5>
@@ -157,7 +160,7 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
                             <input class="form-check-input" type="radio" name="duration" id="dur1" value="1">
                             <label class="form-check-label w-100" for="dur1">
                                 <strong>1 Month</strong>
-                                <span class="text-muted d-block small">Try it out</span>
+                                <span class="text-muted d-block small">No discount</span>
                             </label>
                         </div>
                     </div>
@@ -166,7 +169,7 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
                             <input class="form-check-input" type="radio" name="duration" id="dur6" value="6">
                             <label class="form-check-label w-100" for="dur6">
                                 <strong>6 Months</strong>
-                                <span class="text-muted d-block small">Most flexible</span>
+                                <span class="text-success d-block small fw-semibold">5% discount</span>
                             </label>
                         </div>
                     </div>
@@ -175,7 +178,7 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
                             <input class="form-check-input" type="radio" name="duration" id="dur12" value="12" checked>
                             <label class="form-check-label w-100" for="dur12">
                                 <strong>12 Months</strong>
-                                <span class="text-muted d-block small">Best value</span>
+                                <span class="text-success d-block small fw-semibold">10% discount</span>
                             </label>
                         </div>
                     </div>
@@ -191,8 +194,20 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
                     <tr><td class="text-muted">Pet</td><td class="fw-semibold" id="summaryPet">—</td></tr>
                     <tr><td class="text-muted">Plan</td><td class="fw-semibold" id="summaryPlan">—</td></tr>
                     <tr><td class="text-muted">Duration</td><td class="fw-semibold" id="summaryDuration">12 months</td></tr>
-                    <tr><td class="text-muted">Monthly cost</td><td class="fw-semibold" id="summaryMonthly">—</td></tr>
-                    <tr class="border-top"><td class="text-muted fw-bold">Total</td><td class="fw-bold fs-5 text-primary" id="summaryTotal">—</td></tr>
+                    <tr><td class="text-muted">Original monthly price</td><td class="fw-semibold" id="summaryOriginal">—</td></tr>
+                    <tr id="discountRow" style="display:none;">
+                        <td class="text-muted">Discount</td>
+                        <td class="fw-semibold text-success" id="summaryDiscount">—</td>
+                    </tr>
+                    <tr><td class="text-muted">Discounted monthly price</td><td class="fw-semibold" id="summaryMonthly">—</td></tr>
+                    <tr class="border-top">
+                        <td class="text-muted fw-bold">Total for full duration</td>
+                        <td class="fw-bold fs-5 text-primary" id="summaryTotal">—</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">Charged today (first month)</td>
+                        <td class="fw-semibold" id="summaryFirstMonth">—</td>
+                    </tr>
                 </table>
             </div>
         </div>
@@ -217,6 +232,8 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
             'monthly_premium' => (float)$p['monthly_premium'],
         ];
     }, $plans)) ?>;
+
+    const discounts = { 1: 0, 6: 0.05, 12: 0.10 };
 
     let selectedPlanId = document.getElementById('selectedPlanId')
         ? (document.getElementById('selectedPlanId').value ? parseInt(document.getElementById('selectedPlanId').value) : null)
@@ -261,11 +278,27 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
         card.style.display = 'block';
         btn.disabled = false;
 
+        const discount = discounts[duration] || 0;
+        const originalMonthly = plan.monthly_premium;
+        const discountedMonthly = originalMonthly * (1 - discount);
+        const total = discountedMonthly * duration;
+
         document.getElementById('summaryPet').textContent = petName;
         document.getElementById('summaryPlan').textContent = plan.name;
         document.getElementById('summaryDuration').textContent = duration + (duration === 1 ? ' month' : ' months');
-        document.getElementById('summaryMonthly').textContent = '$' + plan.monthly_premium.toFixed(2);
-        document.getElementById('summaryTotal').textContent = '$' + (plan.monthly_premium * duration).toFixed(2);
+        document.getElementById('summaryOriginal').textContent = '$' + originalMonthly.toFixed(2) + '/mo';
+
+        const discountRow = document.getElementById('discountRow');
+        if (discount > 0) {
+            discountRow.style.display = '';
+            document.getElementById('summaryDiscount').textContent = '-' + (discount * 100) + '% ($' + (originalMonthly * discount).toFixed(2) + '/mo saved)';
+        } else {
+            discountRow.style.display = 'none';
+        }
+
+        document.getElementById('summaryMonthly').textContent = '$' + discountedMonthly.toFixed(2) + '/mo';
+        document.getElementById('summaryTotal').textContent = '$' + total.toFixed(2);
+        document.getElementById('summaryFirstMonth').textContent = '$' + discountedMonthly.toFixed(2);
     }
 
     document.querySelectorAll('input[name="duration"]').forEach(r => r.addEventListener('change', updateSummary));

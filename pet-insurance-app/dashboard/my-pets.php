@@ -6,6 +6,7 @@ require_once __DIR__ . '/../includes/csrf.php';
 require_once __DIR__ . '/../includes/sanitize.php';
 require_once __DIR__ . '/../auth/middleware.php';
 requireLogin();
+requireVerified();
 
 /** @var PDO $db */
 
@@ -308,7 +309,7 @@ function timeRemaining(string $endDate): array {
 
                         <?php if ($remaining && $remaining['days'] <= 30): ?>
                             <div class="mt-3">
-                                <a href="<?= base_path() ?>/dashboard/subscriptions/purchase-coverage.php?pet_id=<?= (int)$pet['id'] ?>"
+                                <a href="<?= base_path() ?>/dashboard/subscriptions/review-and-pay.php?pet_id=<?= (int)$pet['id'] ?>"
                                    class="btn btn-sm btn-warning">
                                     <i class="bi bi-arrow-repeat me-1"></i>Renew Coverage
                                 </a>
