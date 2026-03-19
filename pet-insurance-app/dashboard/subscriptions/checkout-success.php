@@ -57,17 +57,28 @@ if ($sessionId && $db instanceof PDO) {
                     // Already created — just load it
                     $subId = (int) $existing['id'];
                 } else {
-                    // Check pet doesn't already have an active subscription
+                    // Check pet doesn't already have a non-expiring active subscription
                     $activeCheck = $db->prepare('
-                        SELECT id FROM subscriptions
+                        SELECT id, end_date FROM subscriptions
                         WHERE pet_id = :pid AND user_id = :uid AND status = :status
                         LIMIT 1
                     ');
                     $activeCheck->execute([':pid' => $petId, ':uid' => $userId, ':status' => 'active']);
+                    $activeSub = $activeCheck->fetch();
 
-                    if ($activeCheck->fetch()) {
-                        $error = 'This pet already has an active subscription.';
-                    } else {
+                    if ($activeSub) {
+                        $endDate = $activeSub['end_date'] ?? null;
+                        $expiringWithin30Days = $endDate && strtotime($endDate) <= strtotime('+30 days');
+                        if ($expiringWithin30Days) {
+                            // Cancel the old subscription since they're renewing
+                            $db->prepare('UPDATE subscriptions SET status = :status WHERE id = :id')
+                               ->execute([':status' => 'expired', ':id' => $activeSub['id']]);
+                        } else {
+                            $error = 'This pet already has an active subscription.';
+                        }
+                    }
+
+                    if (!$error) {
                         // Create the subscription now that payment is confirmed
                         $startDate = date('Y-m-d');
                         $endDate   = date('Y-m-d', strtotime("+{$duration} months"));

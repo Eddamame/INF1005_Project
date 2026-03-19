@@ -67,15 +67,21 @@ try {
         json_error('Pet not found.', 404);
     }
 
-    // Check for existing active subscription
+    // Check for existing active subscription (allow if expiring within 30 days)
     $subCheck = $db->prepare('
-        SELECT id FROM subscriptions
+        SELECT id, end_date FROM subscriptions
         WHERE pet_id = :pid AND user_id = :uid AND status = :status
         LIMIT 1
     ');
     $subCheck->execute([':pid' => $petId, ':uid' => $userId, ':status' => 'active']);
-    if ($subCheck->fetch()) {
-        json_error('This pet already has an active subscription.', 409);
+    $existingSub = $subCheck->fetch();
+    
+    if ($existingSub) {
+        $endDate = $existingSub['end_date'] ?? null;
+        $expiringWithin30Days = $endDate && strtotime($endDate) <= strtotime('+30 days');
+        if (!$expiringWithin30Days) {
+            json_error('This pet already has an active subscription.', 409);
+        }
     }
 
     // Load plan
@@ -124,7 +130,10 @@ try {
         $duration = 12;
     }
 
-    $totalAmount = ((float) $plan['monthly_premium']) * $duration;
+    $discounts = [1 => 0, 6 => 0.05, 12 => 0.10];
+    $discount = $discounts[$duration] ?? 0;
+    $discountedMonthly = ((float) $plan['monthly_premium']) * (1 - $discount);
+    $totalAmount = $discountedMonthly * $duration;
     $amountCents = (int) round($totalAmount * 100);
     if ($amountCents <= 0) {
         json_error('Invalid plan amount.', 400);
@@ -138,6 +147,9 @@ try {
 
     $durationLabel = $duration . ($duration === 1 ? ' month' : ' months');
 
+    $monthlyCents = (int) round($discountedMonthly * 100);
+    $discountText = $discount > 0 ? ' (' . ($discount * 100) . '% off)' : '';
+
     $session = $stripe->checkout->sessions->create([
         'mode' => 'payment',
         'customer' => $stripeCustomerId,
@@ -145,11 +157,12 @@ try {
             'price_data' => [
                 'currency' => 'usd',
                 'product_data' => [
-                    'name' => $plan['name'] . ' plan for ' . $pet['name'] . ' (' . $durationLabel . ')',
+                    'name' => $plan['name'] . ' plan for ' . $pet['name'] . $discountText,
+                    'description' => '$' . number_format($discountedMonthly, 2) . '/mo × ' . $durationLabel . ' = $' . number_format($totalAmount, 2) . ' total',
                 ],
-                'unit_amount' => $amountCents,
+                'unit_amount' => $monthlyCents,
             ],
-            'quantity' => 1,
+            'quantity' => $duration,
         ]],
         'success_url' => $successUrlFull,
         'cancel_url'  => $cancelUrlFull,

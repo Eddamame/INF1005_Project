@@ -190,11 +190,11 @@ function dashBadge(string $status): string {
     <div class="row g-3 mb-5">
         <?php
         $links = [
-            ['href' => '/admin/users.php',       'icon' => 'bi-people',             'label' => 'Manage Users',       'color' => 'primary'],
-            ['href' => '/admin/claims.php',      'icon' => 'bi-file-earmark-check', 'label' => 'Manage Claims',      'color' => 'warning'],
-            ['href' => '/admin/quotes.php',      'icon' => 'bi-receipt',            'label' => 'Manage Quotes',      'color' => 'info'],
-            ['href' => '/admin/vet-clinics.php', 'icon' => 'bi-hospital',           'label' => 'Vet Clinics',        'color' => 'success'],
-            ['href' => '/admin/audit-log.php',   'icon' => 'bi-journal-text',       'label' => 'Audit Log',          'color' => 'secondary'],
+            ['href' => base_path() . '/admin/users.php',       'icon' => 'bi-people',             'label' => 'Manage Users',       'color' => 'primary'],
+            ['href' => base_path() . '/admin/claims.php',      'icon' => 'bi-file-earmark-check', 'label' => 'Manage Claims',      'color' => 'warning'],
+            ['href' => base_path() . '/admin/quotes.php',      'icon' => 'bi-receipt',            'label' => 'Manage Quotes',      'color' => 'info'],
+            ['href' => base_path() . '/admin/vet-clinics.php', 'icon' => 'bi-hospital',           'label' => 'Vet Clinics',        'color' => 'success'],
+            ['href' => base_path() . '/admin/audit-log.php',   'icon' => 'bi-journal-text',       'label' => 'Audit Log',          'color' => 'secondary'],
         ];
         foreach ($links as $link): ?>
         <div class="col-6 col-md-4 col-lg">
