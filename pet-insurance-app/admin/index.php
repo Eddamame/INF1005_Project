@@ -15,7 +15,7 @@ requireAdmin();
 /** @var PDO $db */
 
 // ── Aggregate stats ──────────────────────────────────────────
-$totalUsers   = (int) $db->query("SELECT COUNT(*) FROM users")->fetchColumn();
+$totalCustomers = (int) $db->query("SELECT COUNT(*) FROM users WHERE role = 'customer'")->fetchColumn();
 $totalPets    = (int) $db->query("SELECT COUNT(*) FROM pets")->fetchColumn();
 $totalClaims  = (int) $db->query("SELECT COUNT(*) FROM claims")->fetchColumn();
 $pendingClaims = (int) $db->query("SELECT COUNT(*) FROM claims WHERE status NOT IN ('approved','rejected')")->fetchColumn();
@@ -93,8 +93,8 @@ function dashBadge(string $status): string {
                         <i class="bi bi-people-fill text-primary fs-4"></i>
                     </div>
                     <div>
-                        <div class="fw-bold fs-4"><?= number_format($totalUsers) ?></div>
-                        <div class="text-muted small">Users</div>
+                        <div class="fw-bold fs-4"><?= number_format($totalCustomers) ?></div>
+                        <div class="text-muted small">Customers</div>
                     </div>
                 </div>
             </div>
