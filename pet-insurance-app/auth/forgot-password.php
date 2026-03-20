@@ -62,7 +62,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div class="container hero-content position-relative">
             <div class="row justify-content-center py-5">
-                <div class="col-md-6 col-lg-5">
+                <div class="col-md-7 col-lg-6 forgot-card-shell">
+                    <div class="forgot-float forgot-float-a d-none d-md-flex" aria-hidden="true">
+                        <i class="bi bi-shield-lock"></i>
+                        <span>Secure reset flow</span>
+                    </div>
+                    <div class="forgot-float forgot-float-b d-none d-md-flex" aria-hidden="true">
+                        <i class="bi bi-clock-history"></i>
+                        <span>Code expires in 15 min</span>
+                    </div>
+                    <div class="forgot-float forgot-float-c d-none d-md-flex" aria-hidden="true">
+                        <i class="bi bi-envelope-check"></i>
+                        <span>Email verified</span>
+                    </div>
                     <div class="p-4 p-lg-5 rounded-3 shadow-lg auth-form-card">
                         <div class="text-center mb-4">
                             <i class="bi bi-key" style="font-size: 3rem; color: var(--ps-teal);"></i>
@@ -76,8 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php if ($success): ?>
                             <div class="alert alert-success"><?= $success ?></div>
                             <div class="text-center">
-                                <a href="<?= base_path() ?>/auth/reset-password.php" class="btn btn-primary"
-                                   style="background: var(--ps-teal); border-color: var(--ps-teal);">
+                                <a href="<?= base_path() ?>/auth/reset-password.php" class="btn btn-primary">
                                     Enter Reset Code
                                 </a>
                             </div>
@@ -88,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <label class="form-label">Email Address</label>
                                     <input type="email" name="email" class="form-control" required autofocus>
                                 </div>
-                                <button class="btn btn-primary w-100" style="background: var(--ps-teal); border-color: var(--ps-teal);">
+                                <button class="btn btn-primary w-100">
                                     Send Reset Code
                                 </button>
                             </form>

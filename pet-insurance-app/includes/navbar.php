@@ -20,7 +20,7 @@ if ($nav_script === 'index.php' && strpos($nav_dir, 'dashboard') === false && st
 <nav class="navbar navbar-expand-lg pawshield-nav" aria-label="Main navigation">
     <div class="container">
         <a class="navbar-brand" href="<?= base_path() ?>/index.php" aria-label="PawShield Home">
-            <span class="brand-paw">🐾</span>
+            <span class="brand-paw" aria-hidden="true">🐾</span>
             <span class="brand-text">PawShield</span>
         </a>
 
