@@ -71,7 +71,8 @@ class ClinicVerifier
      */
     public function findClinic(array $parsed): ?array
     {
-        $code = trim((string) ($parsed['clinic_code'] ?? ''));
+        // Normalize for reliable matching against seeded DB values
+        $code = strtoupper(trim((string) ($parsed['clinic_code'] ?? '')));
         $name = trim((string) ($parsed['clinic_name'] ?? ''));
 
         // 1. Exact code match (best signal)

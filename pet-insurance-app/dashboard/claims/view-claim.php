@@ -9,6 +9,7 @@ require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/csrf.php';
 require_once __DIR__ . '/../../includes/sanitize.php';
 require_once __DIR__ . '/../../auth/middleware.php';
+require_once __DIR__ . '/../../services/ClinicVerifier.php';
 
 requireLogin();
 
@@ -75,6 +76,32 @@ foreach ($documents as $doc) {
         $latestCompleted = $doc;
         $parsed = json_decode($doc['ai_parsed_data'] ?? '[]', true) ?: [];
         break;
+    }
+}
+
+// Clinic verification (derived from latest quote; we do not change claims.status here)
+$latestQuote = !empty($quotes) ? $quotes[0] : null;
+$clinicVerified = $latestQuote ? ((int) ($latestQuote['clinic_verified'] ?? 0) === 1) : null;
+
+// UX improvement: auto re-check clinic verification on page load (no admin action).
+// This is safe because it only updates `quotes.clinic_verified` and does NOT change `claims.status`.
+if ($latestQuote && $clinicVerified === false && $latestCompleted) {
+    $latestQuoteId = (int) ($latestQuote['id'] ?? 0);
+    if ($latestQuoteId > 0 && (!empty($parsed['clinic_code']) || !empty($claim['clinic_code']))) {
+        // Ensure we have the clinic_code in parsed data (fallback to claim's stored clinic_code).
+        if (empty($parsed['clinic_code']) && !empty($claim['clinic_code'])) {
+            $parsed['clinic_code'] = $claim['clinic_code'];
+        }
+
+        try {
+            $verifier = new ClinicVerifier($db);
+            $verification = $verifier->verifyForQuote($latestQuoteId, $parsed);
+            $clinicVerified = (bool) ($verification['verified'] ?? false);
+            // Refresh latestQuote value from DB isn't necessary; `clinicVerified` drives the UI.
+        } catch (Throwable $e) {
+            // Non-fatal: if re-verification fails, we still show the stored value.
+            error_log('view-claim: clinic auto-reverify failed: ' . $e->getMessage());
+        }
     }
 }
 
@@ -169,6 +196,16 @@ function claimStatusBadge(string $status): string {
                         <dd class="col-sm-7"><?= esc($parsed['clinic_name'] ?? $claim['clinic_code'] ?? '—') ?></dd>
                         <dt class="col-sm-5">Clinic Code</dt>
                         <dd class="col-sm-7"><code><?= esc($claim['clinic_code'] ?? ($parsed['clinic_code'] ?? '—')) ?></code></dd>
+                        <dt class="col-sm-5">Clinic Verification</dt>
+                        <dd class="col-sm-7">
+                            <?php if ($clinicVerified === null): ?>
+                                <span class="badge bg-secondary">Not evaluated</span>
+                            <?php elseif ($clinicVerified): ?>
+                                <span class="badge bg-success">Clinic Verified</span>
+                            <?php else: ?>
+                                <span class="badge bg-warning text-dark">Clinic Not Verified</span>
+                            <?php endif; ?>
+                        </dd>
                         <dt class="col-sm-5">Visit Date</dt>
                         <dd class="col-sm-7"><?= esc($claim['visit_date'] ?? ($parsed['visit_date'] ?? '—')) ?></dd>
                         <dt class="col-sm-5">Description</dt>

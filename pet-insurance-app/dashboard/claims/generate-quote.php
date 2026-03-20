@@ -61,9 +61,21 @@ if ($result['success']) {
     $docRow = $docStmt->fetch();
     $parsedData = $docRow ? (json_decode($docRow['ai_parsed_data'], true) ?: []) : [];
 
-    $verifier->verifyForQuote($result['quote_id'], $parsedData);
+    // Robustness: if AI parsed payload is missing clinic_code, fall back to
+    // the value we already stored on the claim during scan-receipt.php.
+    if (!isset($parsedData['clinic_code']) || trim((string) ($parsedData['clinic_code'] ?? '')) === '') {
+        if (!empty($claim['clinic_code'])) {
+            $parsedData['clinic_code'] = $claim['clinic_code'];
+        }
+    }
 
-    $_SESSION['flash_message'] = 'Quote generated successfully! Reference: ' . $result['reference_id'];
+    $verification = $verifier->verifyForQuote($result['quote_id'], $parsedData);
+    $isVerified = (bool) ($verification['verified'] ?? false);
+
+    // Do NOT adjust claims.status here; admin remains responsible for lifecycle changes.
+    // We only display verification result in the UI via quotes.clinic_verified.
+    $_SESSION['flash_message'] = 'Quote generated successfully! Reference: ' . $result['reference_id']
+        . ' — Clinic ' . ($isVerified ? 'Verified' : 'Not Verified') . '.';
 } else {
     $_SESSION['flash_error'] = $result['error'] ?? 'Could not generate quote.';
 }
