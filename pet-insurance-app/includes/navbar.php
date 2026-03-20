@@ -96,7 +96,8 @@ if ($nav_script === 'index.php' && strpos($nav_dir, 'dashboard') === false && st
                         <?php endif; ?>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item text-danger" href="<?= base_path() ?>/auth/logout.php">
+                            <a class="dropdown-item text-danger" href="<?= base_path() ?>/auth/logout.php"
+                               onclick="return confirm('Are you sure you want to log out?');">
                                 <i class="bi bi-box-arrow-right me-2"></i>Log Out
                             </a>
                         </li>

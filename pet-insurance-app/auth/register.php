@@ -50,20 +50,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['confirm_password'] = 'Passwords do not match.';
     }
 
-    // reCAPTCHA verification
-    $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
-    if (!$recaptchaResponse) {
-        $errors['captcha'] = 'Please complete the CAPTCHA.';
-    } elseif (RECAPTCHA_SECRET_KEY) {
-        $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
-        $response = file_get_contents($verifyUrl . '?' . http_build_query([
-            'secret'   => RECAPTCHA_SECRET_KEY,
-            'response' => $recaptchaResponse,
-            'remoteip' => $_SERVER['REMOTE_ADDR'] ?? '',
-        ]));
-        $result = json_decode($response, true);
-        if (empty($result['success'])) {
-            $errors['captcha'] = 'CAPTCHA verification failed. Please try again.';
+    // CAPTCHA verification (Google reCAPTCHA in configured environments,
+    // simple local checkbox fallback when keys are not configured)
+    if (RECAPTCHA_SITE_KEY && RECAPTCHA_SECRET_KEY) {
+        $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
+        if (!$recaptchaResponse) {
+            $errors['captcha'] = 'Please complete the CAPTCHA.';
+        } else {
+            $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
+            $response = file_get_contents($verifyUrl . '?' . http_build_query([
+                'secret'   => RECAPTCHA_SECRET_KEY,
+                'response' => $recaptchaResponse,
+                'remoteip' => $_SERVER['REMOTE_ADDR'] ?? '',
+            ]));
+            $result = json_decode($response, true);
+            if (empty($result['success'])) {
+                $errors['captcha'] = 'CAPTCHA verification failed. Please try again.';
+            }
+        }
+    } else {
+        if (empty($_POST['local_captcha'])) {
+            $errors['captcha'] = 'Please confirm you are not a bot.';
         }
     }
 
@@ -125,7 +132,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= base_path() ?>/assets/css/style.css">
     <link rel="stylesheet" href="<?= base_path() ?>/assets/css/accessibility.css">
+    <?php if (RECAPTCHA_SITE_KEY && RECAPTCHA_SECRET_KEY): ?>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <?php endif; ?>
 </head>
 <body>
 
@@ -151,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="col-6">
                                     <label class="form-label">First Name</label>
                                     <input type="text" name="first_name" class="form-control <?= isset($errors['first_name']) ? 'is-invalid' : '' ?>"
-                                           value="<?= esc($old['first_name'] ?? '') ?>" required>
+                                           value="<?= esc($old['first_name'] ?? '') ?>" required autofocus>
                                     <div class="invalid-feedback"><?= esc($errors['first_name'] ?? '') ?></div>
                                 </div>
                                 <div class="col-6">
@@ -173,18 +182,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label">Password</label>
-                                    <input type="password" name="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" required>
+                                    <div class="input-group">
+                                        <input type="password" id="register-password" name="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" required>
+                                        <button type="button" class="btn btn-outline-secondary password-toggle" data-target="register-password" aria-label="Show password">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
                                     <div class="form-text">Min 8 chars, one uppercase letter, one number.</div>
                                     <div class="invalid-feedback"><?= esc($errors['password'] ?? '') ?></div>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label">Confirm Password</label>
-                                    <input type="password" name="confirm_password"
+                                    <div class="input-group">
+                                        <input type="password" id="register-confirm-password" name="confirm_password"
                                            class="form-control <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" required>
+                                        <button type="button" class="btn btn-outline-secondary password-toggle" data-target="register-confirm-password" aria-label="Show confirm password">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
                                     <div class="invalid-feedback"><?= esc($errors['confirm_password'] ?? '') ?></div>
                                 </div>
                                 <div class="col-12">
+                                    <?php if (RECAPTCHA_SITE_KEY && RECAPTCHA_SECRET_KEY): ?>
                                     <div class="g-recaptcha" data-sitekey="<?= esc(RECAPTCHA_SITE_KEY) ?>"></div>
+                                    <?php else: ?>
+                                    <div class="form-check p-3 rounded-3 border" style="background: var(--ps-off-white); border-color: var(--ps-gray-200) !important;">
+                                        <input class="form-check-input <?= isset($errors['captcha']) ? 'is-invalid' : '' ?>" type="checkbox" value="1" id="local-captcha" name="local_captcha" <?= !empty($_POST['local_captcha']) ? 'checked' : '' ?>>
+                                        <label class="form-check-label" for="local-captcha">
+                                            I’m not a robot
+                                        </label>
+                                    </div>
+                                    <?php endif; ?>
                                     <?php if (isset($errors['captcha'])): ?>
                                         <div class="text-danger small mt-1"><?= esc($errors['captcha']) ?></div>
                                     <?php endif; ?>
@@ -222,3 +250,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </main>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<script>
+document.querySelectorAll('.password-toggle').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var input = document.getElementById(btn.getAttribute('data-target'));
+        if (!input) return;
+        var isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        btn.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+        btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+    });
+});
+</script>

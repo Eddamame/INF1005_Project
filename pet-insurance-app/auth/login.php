@@ -112,12 +112,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <input type="password" name="password" class="form-control" required>
                             </div>
                             <button class="btn btn-primary w-100">Log In</button>
-                            <p class="text-center mt-3 mb-0">No account? 
-                                <p class="text-center mb-0">
-                                    <a href="<?= base_path() ?>/auth/forgot-password.php" class="text-muted small">Forgot your password?</a>
+                            <div class="auth-actions text-center mt-3">
+                                <a href="<?= base_path() ?>/auth/forgot-password.php" class="auth-link-muted">Forgot your password?</a>
+                                <p class="auth-register-copy mb-0 mt-2">
+                                    No account?
+                                    <a href="<?= base_path() ?>/auth/register.php" class="auth-link-primary">Register</a>
                                 </p>
-                                <a href="<?= base_path() ?>/auth/register.php">Register</a>
-                            </p>
+                            </div>
                         </form>
                     </div>
                 </div>

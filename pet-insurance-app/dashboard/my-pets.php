@@ -198,10 +198,10 @@ function timeRemaining(string $endDate): array {
 
 <?php require_once __DIR__ . '/../includes/navbar.php'; ?>
 
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>My Pets</h2>
-        <a href="?action=add" class="btn btn-success">+ Add Pet</a>
+<div class="container py-5 my-pets-page">
+    <div class="d-flex justify-content-between align-items-center mb-4 my-pets-header">
+        <h2 class="mb-0">My Pets</h2>
+        <a href="?action=add" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Pet</a>
     </div>
 
     <?php if ($success): ?>
@@ -209,7 +209,7 @@ function timeRemaining(string $endDate): array {
     <?php endif; ?>
 
     <?php if ($action === 'add' || ($action === 'update' && $errors)): ?>
-    <div class="card mb-4">
+    <div class="card mb-4 my-pets-form-card border-0 shadow-sm">
         <div class="card-body">
             <h5>Add a New Pet</h5>
             <?= renderPetForm($errors, [], 'add', $SPECIES) ?>
@@ -218,7 +218,7 @@ function timeRemaining(string $endDate): array {
     <?php endif; ?>
 
     <?php if ($editPet || ($action === 'update' && $errors && $editPet)): ?>
-    <div class="card mb-4">
+    <div class="card mb-4 my-pets-form-card border-0 shadow-sm">
         <div class="card-body">
             <h5>Edit Pet</h5>
             <?= renderPetForm($errors, $editPet, 'update', $SPECIES) ?>
@@ -234,11 +234,25 @@ function timeRemaining(string $endDate): array {
             $sub = $subByPetId[(int)$pet['id']] ?? null;
             $remaining = ($sub && !empty($sub['end_date'])) ? timeRemaining($sub['end_date']) : null;
             ?>
-            <div class="card mb-3">
+            <div class="card mb-3 pet-summary-card border-0 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h5 class="mb-1"><?= esc($pet['name']) ?></h5>
+                            <?php
+                            $species = strtolower((string)($pet['species'] ?? ''));
+                            $speciesIcon = match ($species) {
+                                'dog' => '🐶',
+                                'cat' => '🐱',
+                                'bird' => '🐦',
+                                'rabbit' => '🐰',
+                                'reptile' => '🦎',
+                                default => '🐾',
+                            };
+                            ?>
+                            <h5 class="mb-1 d-flex align-items-center gap-2">
+                                <span class="pet-species-badge" aria-hidden="true"><?= esc($speciesIcon) ?></span>
+                                <?= esc($pet['name']) ?>
+                            </h5>
                             <p class="text-muted small mb-0">
                                 <?= esc(ucfirst($pet['species'])) ?>
                                 <?= $pet['breed'] ? ' · ' . esc($pet['breed']) : '' ?>

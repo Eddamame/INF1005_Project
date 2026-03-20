@@ -61,20 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="hero-shape hero-shape-2"></div>
         </div>
         <div class="container hero-content position-relative">
-            <div class="row justify-content-center py-5">
-                <div class="col-md-7 col-lg-6 forgot-card-shell">
-                    <div class="forgot-float forgot-float-a d-none d-md-flex" aria-hidden="true">
-                        <i class="bi bi-shield-lock"></i>
-                        <span>Secure reset flow</span>
-                    </div>
-                    <div class="forgot-float forgot-float-b d-none d-md-flex" aria-hidden="true">
-                        <i class="bi bi-clock-history"></i>
-                        <span>Code expires in 15 min</span>
-                    </div>
-                    <div class="forgot-float forgot-float-c d-none d-md-flex" aria-hidden="true">
-                        <i class="bi bi-envelope-check"></i>
-                        <span>Email verified</span>
-                    </div>
+            <div class="row align-items-center min-vh-75 py-5">
+                <div class="col-lg-5">
                     <div class="p-4 p-lg-5 rounded-3 shadow-lg auth-form-card">
                         <div class="text-center mb-4">
                             <i class="bi bi-key" style="font-size: 3rem; color: var(--ps-teal);"></i>
@@ -110,6 +98,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 ← Back to login
                             </a>
                         </div>
+                    </div>
+                </div>
+                <div class="col-lg-7 d-none d-lg-flex justify-content-center align-items-center" aria-hidden="true">
+                    <div class="hero-card-float auth-float-cards">
+                        <div class="float-card fc-1">
+                            <i class="bi bi-envelope-check"></i>
+                            <span>Reset link sent</span>
+                            <strong>Check your inbox</strong>
+                        </div>
+                        <div class="float-card fc-2">
+                            <i class="bi bi-shield-lock"></i>
+                            <span>Secure reset</span>
+                            <div class="scan-bar"><div class="scan-fill"></div></div>
+                        </div>
+                        <div class="float-card fc-3">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Expires quickly</span>
+                            <strong>15 mins only</strong>
+                        </div>
+                        <div class="hero-paw-large">🐾</div>
                     </div>
                 </div>
             </div>

@@ -298,6 +298,74 @@ img { max-width: 100%; height: auto; }
     background: var(--ps-off-white);
 }
 
+.my-pets-page .my-pets-header h2 {
+    color: var(--ps-navy);
+    font-weight: 700;
+}
+.my-pets-page .my-pets-header .btn-primary {
+    border-radius: var(--radius-sm);
+    box-shadow: 0 6px 18px rgba(13,148,136,.22);
+}
+.my-pets-page .my-pets-form-card,
+.my-pets-page .pet-summary-card {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--ps-gray-200);
+}
+.my-pets-page .pet-summary-card {
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+.my-pets-page .pet-summary-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(13,148,136,.35);
+    box-shadow: 0 10px 26px rgba(15,43,61,.12) !important;
+}
+.pet-species-badge {
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ps-teal-light);
+    font-size: 1rem;
+    line-height: 1;
+}
+.my-pets-page .btn-outline-primary,
+.my-pets-page .btn-outline-danger {
+    border-radius: 0.45rem;
+}
+
+/* New claim page polish */
+.claims-new-page .claims-new-title {
+    color: var(--ps-navy);
+    font-weight: 700;
+}
+.claim-step-card {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--ps-gray-200);
+}
+.claim-step-card .card-title {
+    color: var(--ps-navy);
+    font-weight: 700;
+}
+.claim-step-card--details {
+    border-top: 3px solid rgba(15,43,61,.18);
+}
+.claim-step-card--upload {
+    border-top: 3px solid rgba(13,148,136,.35);
+}
+.claim-policy-alert {
+    border-radius: 0.75rem;
+    border: 1px solid #ead9a6;
+    background: #f8edc9;
+}
+.claim-upload-dropzone {
+    background: linear-gradient(180deg, rgba(248,250,251,.95) 0%, rgba(240,249,255,.6) 100%);
+}
+.claim-upload-empty i {
+    opacity: 0.75;
+}
+
 @media (max-width: 575.98px) {
     .how-intro-block {
         flex-direction: column;
@@ -381,28 +449,6 @@ img { max-width: 100%; height: auto; }
     margin-left: 0.25rem;
 }
 .auth-link-primary:hover { color: var(--ps-teal-dark); }
-.forgot-card-shell { position: relative; }
-.forgot-float {
-    position: absolute;
-    z-index: 2;
-    background: rgba(255,255,255,.12);
-    border: 1px solid rgba(110,231,224,.28);
-    color: rgba(255,255,255,.92);
-    backdrop-filter: blur(8px);
-    border-radius: var(--radius-md);
-    padding: 0.55rem 0.8rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    box-shadow: 0 10px 30px rgba(0,0,0,.18);
-    pointer-events: none;
-}
-.forgot-float i { color: var(--ps-teal-light); font-size: 1rem; }
-.forgot-float-a { top: 10%; left: 0.75rem; }
-.forgot-float-b { bottom: 18%; right: 0.75rem; }
-.forgot-float-c { top: 2%; right: 2rem; }
 .auth-float-cards {
     width: 320px;
     height: 300px;
@@ -475,9 +521,14 @@ img { max-width: 100%; height: auto; }
 
 .hero-subtitle {
     font-size: 1.15rem;
-    color: rgba(255,255,255,.75);
+    color: rgba(255,255,255,.88);
     max-width: 480px;
     margin-bottom: 2rem;
+}
+
+.hero-section .hero-subtitle,
+.hero-section--short .hero-subtitle {
+    color: rgba(255,255,255,.9) !important;
 }
 
 .hero-actions {
@@ -1068,7 +1119,7 @@ img { max-width: 100%; height: auto; }
 }
 
 .page-hero-subtitle {
-    color: rgba(255,255,255,.72);
+    color: rgba(255,255,255,.86);
     font-size: 1.05rem;
     max-width: 560px;
     margin: 0;

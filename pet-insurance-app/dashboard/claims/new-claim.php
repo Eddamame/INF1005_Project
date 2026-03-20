@@ -144,18 +144,18 @@ if (!$claimId && $_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php require_once __DIR__ . '/../../includes/navbar.php'; ?>
 
 <main id="main-content">
-<div class="container py-5" style="max-width: 960px;">
+<div class="container py-5 claims-new-page" style="max-width: 960px;">
 
     <a href="<?= base_path() ?>/dashboard/claims/index.php" class="btn btn-outline-secondary btn-sm mb-4">
         <i class="bi bi-arrow-left me-1"></i> Back to Claims
     </a>
 
-    <h2 class="mb-4"><i class="bi bi-file-earmark-plus me-2"></i>Start a New Claim</h2>
+    <h2 class="mb-4 claims-new-title"><i class="bi bi-file-earmark-plus me-2"></i>Start a New Claim</h2>
 
     <div class="row g-4">
         <!-- Left: Create Claim Form -->
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
+            <div class="card border-0 shadow-sm claim-step-card claim-step-card--details">
                 <div class="card-body">
                     <h5 class="card-title mb-3">1. Claim Details</h5>
 
@@ -169,7 +169,7 @@ if (!$claimId && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <?php if (!$claimId): ?>
                         <?php if (empty($petsWithPolicies)): ?>
-                            <div class="alert alert-warning">
+                            <div class="alert alert-warning claim-policy-alert">
                                 <i class="bi bi-exclamation-triangle me-1"></i>
                                 You need an active policy before you can submit a claim.
                                 <a href="<?= base_path() ?>/dashboard/my-pets.php">Go to My Pets</a> to purchase coverage.
@@ -216,7 +216,7 @@ if (!$claimId && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Right: Upload Receipt -->
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
+            <div class="card border-0 shadow-sm claim-step-card claim-step-card--upload">
                 <div class="card-body">
                     <h5 class="card-title mb-3">2. Upload Vet Receipt</h5>
 
@@ -224,7 +224,7 @@ if (!$claimId && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         <p class="text-muted small">
                             Upload a photo or PDF of your vet receipt. Our AI will scan it and extract the details automatically.
                         </p>
-                        <div class="upload-dropzone"
+                        <div class="upload-dropzone claim-upload-dropzone"
                              id="receipt-dropzone"
                              data-receipt-dropzone
                              data-claim-id="<?= (int) $claimId ?>"
@@ -289,7 +289,7 @@ if (!$claimId && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             </form>
                         </div>
                     <?php else: ?>
-                        <div class="text-center py-4">
+                        <div class="text-center py-4 claim-upload-empty">
                             <i class="bi bi-arrow-left-circle" style="font-size: 2rem; color: var(--ps-gray-400);"></i>
                             <p class="text-muted mt-2 mb-0">Create a claim first, then upload your receipt here.</p>
                         </div>
