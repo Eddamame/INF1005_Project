@@ -84,8 +84,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <form method="POST" novalidate>
                                 <?= csrfField() ?>
                                 <div class="mb-3">
-                                    <label class="form-label">Email Address</label>
-                                    <input type="email" name="email" class="form-control" required autofocus>
+                                    <label class="form-label" for="forgot-email">Email Address</label>
+                                    <input type="email" id="forgot-email" name="email" class="form-control" required autofocus autocomplete="email">
                                 </div>
                                 <button class="btn btn-primary w-100">
                                     Send Reset Code

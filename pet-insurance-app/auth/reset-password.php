@@ -110,24 +110,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <form method="POST" novalidate>
                                 <?= csrfField() ?>
                                 <div class="mb-3">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" name="email" class="form-control"
-                                           value="<?= esc($_POST['email'] ?? '') ?>" required>
+                                    <label class="form-label" for="reset-email">Email</label>
+                                    <input type="email" id="reset-email" name="email" class="form-control"
+                                           value="<?= esc($_POST['email'] ?? '') ?>" required autocomplete="email">
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Reset Code</label>
-                                    <input type="text" name="reset_code" class="form-control text-center"
+                                    <label class="form-label" for="reset-code">Reset Code</label>
+                                    <input type="text" id="reset-code" name="reset_code" class="form-control text-center"
                                            maxlength="6" placeholder="000000"
-                                           style="letter-spacing: 0.3em; font-weight: 600;" required>
+                                           style="letter-spacing: 0.3em; font-weight: 600;" required autocomplete="one-time-code" inputmode="numeric">
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">New Password</label>
-                                    <input type="password" name="new_password" class="form-control" required>
+                                    <label class="form-label" for="reset-new-password">New Password</label>
+                                    <input type="password" id="reset-new-password" name="new_password" class="form-control" required autocomplete="new-password">
                                     <div class="form-text">Min 8 chars, one uppercase letter, one number.</div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Confirm New Password</label>
-                                    <input type="password" name="confirm_password" class="form-control" required>
+                                    <label class="form-label" for="reset-confirm-password">Confirm New Password</label>
+                                    <input type="password" id="reset-confirm-password" name="confirm_password" class="form-control" required autocomplete="new-password">
                                 </div>
                                 <button class="btn btn-primary w-100" style="background: var(--ps-teal); border-color: var(--ps-teal);">
                                     Reset Password

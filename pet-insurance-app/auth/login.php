@@ -103,13 +103,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <form method="POST" novalidate>
                             <?= csrfField() ?>
                             <div class="mb-3">
-                                <label class="form-label">Email</label>
-                                <input type="email" name="email" class="form-control"
-                                       value="<?= esc($oldEmail) ?>" required autofocus>
+                                <label class="form-label" for="login-email">Email</label>
+                                <input type="email" id="login-email" name="email" class="form-control"
+                                       value="<?= esc($oldEmail) ?>" required autofocus autocomplete="email">
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Password</label>
-                                <input type="password" name="password" class="form-control" required>
+                                <label class="form-label" for="login-password">Password</label>
+                                <input type="password" id="login-password" name="password" class="form-control" required autocomplete="current-password">
                             </div>
                             <button class="btn btn-primary w-100">Log In</button>
                             <div class="auth-actions text-center mt-3">

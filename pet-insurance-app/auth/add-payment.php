@@ -136,23 +136,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?= csrfField() ?>
 
                             <div class="mb-3">
-                                <label class="form-label">Cardholder Name</label>
-                                <input type="text" name="card_holder" class="form-control"
+                                <label class="form-label" for="pay-card-holder">Cardholder Name</label>
+                                <input type="text" id="pay-card-holder" name="card_holder" class="form-control"
                                        value="<?= esc($_POST['card_holder'] ?? '') ?>"
-                                       placeholder="John Doe" required>
+                                       placeholder="John Doe" required autocomplete="cc-name">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Card Number</label>
-                                <input type="text" name="card_number" class="form-control"
+                                <label class="form-label" for="pay-card-number">Card Number</label>
+                                <input type="text" id="pay-card-number" name="card_number" class="form-control"
                                        value="<?= esc($_POST['card_number'] ?? '') ?>"
-                                       placeholder="4242 4242 4242 4242" maxlength="19" required>
+                                       placeholder="4242 4242 4242 4242" maxlength="19" required autocomplete="cc-number" inputmode="numeric">
                             </div>
 
                             <div class="row g-3 mb-3">
                                 <div class="col-4">
-                                    <label class="form-label">Month</label>
-                                    <select name="expiry_month" class="form-select" required>
+                                    <label class="form-label" for="pay-exp-month">Month</label>
+                                    <select id="pay-exp-month" name="expiry_month" class="form-select" required autocomplete="cc-exp-month">
                                         <option value="">MM</option>
                                         <?php for ($m = 1; $m <= 12; $m++): ?>
                                             <option value="<?= $m ?>" <?= (int)($_POST['expiry_month'] ?? 0) === $m ? 'selected' : '' ?>>
@@ -173,9 +173,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </select>
                                 </div>
                                 <div class="col-4">
-                                    <label class="form-label">CVV</label>
-                                    <input type="text" name="cvv" class="form-control"
-                                           placeholder="123" maxlength="4" required>
+                                    <label class="form-label" for="pay-cvv">CVV</label>
+                                    <input type="text" id="pay-cvv" name="cvv" class="form-control"
+                                           placeholder="123" maxlength="4" required autocomplete="cc-csc" inputmode="numeric">
                                 </div>
                             </div>
 

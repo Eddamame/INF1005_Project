@@ -158,32 +158,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <div class="row g-3">
                                 <div class="col-6">
-                                    <label class="form-label">First Name</label>
-                                    <input type="text" name="first_name" class="form-control <?= isset($errors['first_name']) ? 'is-invalid' : '' ?>"
-                                           value="<?= esc($old['first_name'] ?? '') ?>" required autofocus>
+                                    <label class="form-label" for="reg-first-name">First Name</label>
+                                    <input type="text" id="reg-first-name" name="first_name" class="form-control <?= isset($errors['first_name']) ? 'is-invalid' : '' ?>"
+                                           value="<?= esc($old['first_name'] ?? '') ?>" required autofocus autocomplete="given-name">
                                     <div class="invalid-feedback"><?= esc($errors['first_name'] ?? '') ?></div>
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label">Last Name</label>
-                                    <input type="text" name="last_name" class="form-control <?= isset($errors['last_name']) ? 'is-invalid' : '' ?>"
-                                           value="<?= esc($old['last_name'] ?? '') ?>" required>
+                                    <label class="form-label" for="reg-last-name">Last Name</label>
+                                    <input type="text" id="reg-last-name" name="last_name" class="form-control <?= isset($errors['last_name']) ? 'is-invalid' : '' ?>"
+                                           value="<?= esc($old['last_name'] ?? '') ?>" required autocomplete="family-name">
                                     <div class="invalid-feedback"><?= esc($errors['last_name'] ?? '') ?></div>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" name="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>"
-                                           value="<?= esc($old['email'] ?? '') ?>" required>
+                                    <label class="form-label" for="reg-email">Email</label>
+                                    <input type="email" id="reg-email" name="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>"
+                                           value="<?= esc($old['email'] ?? '') ?>" required autocomplete="email">
                                     <div class="invalid-feedback"><?= esc($errors['email'] ?? '') ?></div>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label">Phone <span class="text-muted">(optional)</span></label>
-                                    <input type="tel" name="phone" class="form-control"
-                                           value="<?= esc($old['phone'] ?? '') ?>">
+                                    <label class="form-label" for="reg-phone">Phone <span class="text-muted">(optional)</span></label>
+                                    <input type="tel" id="reg-phone" name="phone" class="form-control"
+                                           value="<?= esc($old['phone'] ?? '') ?>" autocomplete="tel">
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label">Password</label>
+                                    <label class="form-label" for="register-password">Password</label>
                                     <div class="input-group">
-                                        <input type="password" id="register-password" name="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" required>
+                                        <input type="password" id="register-password" name="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" required autocomplete="new-password">
                                         <button type="button" class="btn btn-outline-secondary password-toggle" data-target="register-password" aria-label="Show password">
                                             <i class="bi bi-eye"></i>
                                         </button>
@@ -192,10 +192,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="invalid-feedback"><?= esc($errors['password'] ?? '') ?></div>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label">Confirm Password</label>
+                                    <label class="form-label" for="register-confirm-password">Confirm Password</label>
                                     <div class="input-group">
                                         <input type="password" id="register-confirm-password" name="confirm_password"
-                                           class="form-control <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" required>
+                                           class="form-control <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" required autocomplete="new-password">
                                         <button type="button" class="btn btn-outline-secondary password-toggle" data-target="register-confirm-password" aria-label="Show confirm password">
                                             <i class="bi bi-eye"></i>
                                         </button>

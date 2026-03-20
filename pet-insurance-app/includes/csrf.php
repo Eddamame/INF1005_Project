@@ -85,7 +85,12 @@ function requireValidCsrf(): void
     $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
 
     if (!validateCsrfToken($token)) {
-        http_response_code(403);
-        die('Invalid or missing CSRF token. Please refresh the page and try again.');
+        http_response_code(419);
+        $basePath = defined('BASE_PATH') ? BASE_PATH : '';
+        if (!headers_sent()) {
+            header('Location: ' . $basePath . '/pages/419.php');
+            exit;
+        }
+        die('Session expired. Please refresh the page and try again.');
     }
 }

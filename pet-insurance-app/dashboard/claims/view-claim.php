@@ -310,19 +310,21 @@ function claimStatusBadge(string $status): string {
                     <?php if (!empty($parsed['line_items']) && is_array($parsed['line_items'])): ?>
                         <hr>
                         <h6 class="small fw-bold">Line Items</h6>
-                        <table class="table table-sm mb-0">
-                            <thead><tr><th>Description</th><th class="text-end">Amount</th></tr></thead>
-                            <tbody>
-                            <?php foreach ($parsed['line_items'] as $item): ?>
-                                <tr>
-                                    <td class="small"><?= esc($item['description'] ?? '') ?></td>
-                                    <td class="text-end small">
-                                        <?= isset($item['amount']) ? '$' . number_format((float)$item['amount'], 2) : '—' ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead><tr><th>Description</th><th class="text-end">Amount</th></tr></thead>
+                                <tbody>
+                                <?php foreach ($parsed['line_items'] as $item): ?>
+                                    <tr>
+                                        <td class="small"><?= esc($item['description'] ?? '') ?></td>
+                                        <td class="text-end small">
+                                            <?= isset($item['amount']) ? '$' . number_format((float)$item['amount'], 2) : '—' ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -374,17 +376,19 @@ function claimStatusBadge(string $status): string {
                     if (!empty($lineItems)): ?>
                         <hr>
                         <h6 class="small fw-bold">Itemized Costs</h6>
-                        <table class="table table-sm mb-0">
-                            <thead><tr><th>Description</th><th class="text-end">Amount</th></tr></thead>
-                            <tbody>
-                            <?php foreach ($lineItems as $item): ?>
-                                <tr>
-                                    <td class="small"><?= esc($item['description'] ?? '') ?></td>
-                                    <td class="text-end small">$<?= number_format((float)($item['amount'] ?? 0), 2) ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead><tr><th>Description</th><th class="text-end">Amount</th></tr></thead>
+                                <tbody>
+                                <?php foreach ($lineItems as $item): ?>
+                                    <tr>
+                                        <td class="small"><?= esc($item['description'] ?? '') ?></td>
+                                        <td class="text-end small">$<?= number_format((float)($item['amount'] ?? 0), 2) ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>

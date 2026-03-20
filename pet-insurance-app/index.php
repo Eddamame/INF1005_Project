@@ -195,7 +195,7 @@ if (empty($plans)) {
                 foreach ($testimonials as $t): ?>
                 <div class="col-md-4">
                     <div class="testimonial-card" role="article">
-                        <div class="testimonial-stars" aria-label="<?php echo $t['rating']; ?> out of 5 stars">
+                        <div class="testimonial-stars" role="img" aria-label="<?php echo (int) $t['rating']; ?> out of 5 stars">
                             <?php for ($s = 0; $s < $t['rating']; $s++): ?>
                             <i class="bi bi-star-fill" aria-hidden="true"></i>
                             <?php endfor; ?>

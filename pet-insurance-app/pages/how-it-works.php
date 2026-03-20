@@ -82,7 +82,7 @@ $steps = [
     </section>
 
     <!-- What you'll need -->
-    <section class="py-6" style="background: var(--ps-off-white);" aria-labelledby="need-heading">
+    <section class="py-6 hiw-need-section" style="background: var(--ps-off-white);" aria-labelledby="need-heading">
         <div class="container">
             <div class="section-header text-center mb-4">
                 <span class="section-label">Before You Start</span>
@@ -90,8 +90,8 @@ $steps = [
             </div>
             <div class="row g-4 justify-content-center">
                 <div class="col-md-5 col-lg-4">
-                    <div class="d-flex gap-3 p-4 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
-                        <div class="flex-shrink-0 rounded-2 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: var(--ps-teal-light);">
+                    <div class="d-flex gap-3 p-4 rounded-3 h-100 hiw-need-card hiw-need-card--1" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
+                        <div class="flex-shrink-0 rounded-2 d-flex align-items-center justify-content-center hiw-need-icon" style="width: 48px; height: 48px; background: var(--ps-teal-light);">
                             <i class="bi bi-file-earmark-text" style="color: var(--ps-teal); font-size: 1.25rem;"></i>
                         </div>
                         <div>
@@ -101,8 +101,8 @@ $steps = [
                     </div>
                 </div>
                 <div class="col-md-5 col-lg-4">
-                    <div class="d-flex gap-3 p-4 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
-                        <div class="flex-shrink-0 rounded-2 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: var(--ps-teal-light);">
+                    <div class="d-flex gap-3 p-4 rounded-3 h-100 hiw-need-card hiw-need-card--2" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
+                        <div class="flex-shrink-0 rounded-2 d-flex align-items-center justify-content-center hiw-need-icon" style="width: 48px; height: 48px; background: var(--ps-teal-light);">
                             <i class="bi bi-person-badge" style="color: var(--ps-teal); font-size: 1.25rem;"></i>
                         </div>
                         <div>

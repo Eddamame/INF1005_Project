@@ -122,11 +122,11 @@ if (isset($_GET['resend'])) {
                         <form method="POST" novalidate>
                             <?= csrfField() ?>
                             <div class="mb-3">
-                                <label class="form-label">Verification Code</label>
-                                <input type="text" name="verification_code" class="form-control form-control-lg text-center"
+                                <label class="form-label" for="verify-code">Verification Code</label>
+                                <input type="text" id="verify-code" name="verification_code" class="form-control form-control-lg text-center"
                                        maxlength="6" placeholder="000000"
                                        style="letter-spacing: 0.5em; font-size: 1.5rem; font-weight: 700;"
-                                       autofocus required>
+                                       autofocus required autocomplete="one-time-code" inputmode="numeric">
                             </div>
                             <button class="btn btn-primary w-100" style="background: var(--ps-teal); border-color: var(--ps-teal);">
                                 Verify

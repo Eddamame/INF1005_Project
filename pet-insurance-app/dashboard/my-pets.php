@@ -43,7 +43,7 @@ function getPetForUser(PDO $db, int $petId, int $userId): array|false {
     return $stmt->fetch();
 }
 
-$action = inputString('action', 'GET') ?? inputString('action') ?? '';
+$action = inputString('action') ?? inputString('action', 'GET') ?? '';
 
 // ── DELETE ───────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'delete') {
@@ -358,7 +358,7 @@ function renderPetForm(array $errors, array $pet, string $action, array $species
         $speciesOptions .= "<option value=\"{$s}\" {$sel}>" . ucfirst($s) . "</option>";
     }
     ob_start(); ?>
-    <form method="POST" novalidate>
+    <form method="POST" action="<?= base_path() ?>/dashboard/my-pets.php" novalidate>
         <?php csrfField(); ?>
         <input type="hidden" name="action" value="<?= esc($action) ?>">
         <?= $hiddenId ?>

@@ -259,10 +259,12 @@ if (!$claimId && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                 <div id="scan-line-items" class="mt-2" hidden>
                                     <h6 class="small fw-bold">Line Items</h6>
-                                    <table class="table table-sm mb-0" id="scan-items-table">
-                                        <thead><tr><th>Description</th><th class="text-end">Amount</th></tr></thead>
-                                        <tbody></tbody>
-                                    </table>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm mb-0" id="scan-items-table">
+                                            <thead><tr><th>Description</th><th class="text-end">Amount</th></tr></thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
 

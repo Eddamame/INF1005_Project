@@ -55,21 +55,26 @@ require_once __DIR__ . '/../includes/csrf.php';
     </section>
 
     <!-- Our story -->
-    <section class="py-6" aria-labelledby="story-heading">
+    <section class="py-6 about-story-section" aria-labelledby="story-heading">
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6">
                     <span class="section-label">Who We Are</span>
                     <h2 id="story-heading" class="section-title">Pet insurance, reimagined</h2>
-                    <p class="text-body">
+                    <p class="text-body about-story-text">
                         PawShield started with a simple frustration: vet bills are stressful enough without spending hours on claim forms and waiting weeks for a response. We wanted insurance that works the way you live — fast, transparent, and on your phone.
                     </p>
-                    <p class="text-body mb-0">
+                    <p class="text-body mb-0 about-story-text">
                         So we built an AI-powered platform that reads your vet receipt, verifies it with trusted clinics, and gives you an instant reimbursement quote. No faxing, no back-and-forth. Just upload, get your quote, and get back to what matters: your pet.
                     </p>
+                    <div class="about-story-points mt-4" role="group" aria-label="PawShield values">
+                        <span class="about-story-pill"><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i> Fast quotes</span>
+                        <span class="about-story-pill"><i class="bi bi-shield-check" aria-hidden="true"></i> Trusted verification</span>
+                        <span class="about-story-pill"><i class="bi bi-phone" aria-hidden="true"></i> Mobile-first</span>
+                    </div>
                 </div>
                 <div class="col-lg-6 d-flex justify-content-center">
-                    <div class="about-visual p-4 p-lg-5 rounded-3 text-center" style="background: var(--ps-teal-light); border: 1px solid rgba(13,148,136,.2); max-width: 100%;">
+                    <div class="about-visual about-story-card p-4 p-lg-5 rounded-3 text-center" style="background: var(--ps-teal-light); border: 1px solid rgba(13,148,136,.2); max-width: 100%;">
                         <div class="d-flex flex-column flex-sm-row align-items-center justify-content-center gap-3 mb-3">
                             <div class="about-icon-box rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width:64px;height:64px;background:var(--ps-teal);color:white;">
                                 <i class="bi bi-heart-pulse" style="font-size:1.75rem;"></i>
@@ -139,7 +144,7 @@ require_once __DIR__ . '/../includes/csrf.php';
                     <div class="value-card value-card--2 text-center p-4 rounded-3 h-100" style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
                         <i class="bi bi-speedometer2 d-block mb-2" style="font-size:2rem; color:var(--ps-teal);" aria-hidden="true"></i>
                         <h3 class="h6 fw-bold mb-2" style="color:var(--ps-navy);">Speed</h3>
-                        <p class="small text-muted mb-0">AI does the heavy lifting so you get answers fast.</p>
+                        <p class="small text-muted mb-0">Our AI does the heavy lifting so you get answers fast.</p>
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-3">

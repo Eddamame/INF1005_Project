@@ -243,28 +243,28 @@ function cardIcon(string $brand): string {
                 <input type="hidden" name="action" value="update_profile">
                 <div class="row g-3">
                     <div class="col-6">
-                        <label class="form-label">First Name</label>
-                        <input type="text" name="first_name"
+                        <label class="form-label" for="profile-first-name">First Name</label>
+                        <input type="text" id="profile-first-name" name="first_name"
                                class="form-control <?= isset($errors['first_name']) ? 'is-invalid' : '' ?>"
-                               value="<?= esc($user['first_name']) ?>" required>
+                               value="<?= esc($user['first_name']) ?>" required autocomplete="given-name">
                         <div class="invalid-feedback"><?= esc($errors['first_name'] ?? '') ?></div>
                     </div>
                     <div class="col-6">
-                        <label class="form-label">Last Name</label>
-                        <input type="text" name="last_name"
+                        <label class="form-label" for="profile-last-name">Last Name</label>
+                        <input type="text" id="profile-last-name" name="last_name"
                                class="form-control <?= isset($errors['last_name']) ? 'is-invalid' : '' ?>"
-                               value="<?= esc($user['last_name']) ?>" required>
+                               value="<?= esc($user['last_name']) ?>" required autocomplete="family-name">
                         <div class="invalid-feedback"><?= esc($errors['last_name'] ?? '') ?></div>
                     </div>
                     <div class="col-12">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" value="<?= esc($user['email']) ?>" disabled>
+                        <label class="form-label" for="profile-email">Email</label>
+                        <input type="email" id="profile-email" class="form-control" value="<?= esc($user['email']) ?>" disabled autocomplete="email">
                         <div class="form-text">Email cannot be changed.</div>
                     </div>
                     <div class="col-12">
-                        <label class="form-label">Phone</label>
-                        <input type="tel" name="phone" class="form-control"
-                               value="<?= esc($user['phone'] ?? '') ?>">
+                        <label class="form-label" for="profile-phone">Phone</label>
+                        <input type="tel" id="profile-phone" name="phone" class="form-control"
+                               value="<?= esc($user['phone'] ?? '') ?>" autocomplete="tel">
                     </div>
                 </div>
                 <button class="btn btn-primary mt-3">Save Changes</button>
@@ -296,7 +296,7 @@ function cardIcon(string $brand): string {
                 <?php foreach ($paymentMethods as $pm): ?>
                 <div class="d-flex align-items-center justify-content-between border rounded p-3 mb-2">
                     <div class="d-flex align-items-center gap-3">
-                        <i class="bi <?= cardIcon($pm['card_brand']) ?> fs-4 text-primary"></i>
+                        <i class="bi <?= cardIcon($pm['card_brand']) ?> fs-4 text-primary" aria-hidden="true"></i>
                         <div>
                             <strong><?= esc($pm['card_brand']) ?></strong> ending in <code><?= esc($pm['card_last_four']) ?></code>
                             <?php if ((int)$pm['is_default']): ?>
@@ -319,8 +319,9 @@ function cardIcon(string $brand): string {
                         <?php endif; ?>
                         <!-- Remove -->
                         <button class="btn btn-sm btn-outline-danger" type="button"
-                                data-bs-toggle="modal" data-bs-target="#removeCardModal<?= (int)$pm['id'] ?>">
-                            <i class="bi bi-trash"></i>
+                                data-bs-toggle="modal" data-bs-target="#removeCardModal<?= (int)$pm['id'] ?>"
+                                aria-label="<?= esc('Remove ' . $pm['card_brand'] . ' card ending in ' . $pm['card_last_four']) ?>">
+                            <i class="bi bi-trash" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
@@ -335,11 +336,12 @@ function cardIcon(string $brand): string {
                                 <input type="hidden" name="card_id" value="<?= (int)$pm['id'] ?>">
                                 <div class="modal-header">
                                     <h6 class="modal-title">Confirm Password</h6>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
                                     <p class="small text-muted">Enter your password to set this card as default.</p>
-                                    <input type="password" name="auth_password" class="form-control" placeholder="Password" required>
+                                    <label class="form-label small" for="default-card-pw-<?= (int)$pm['id'] ?>">Account password</label>
+                                    <input type="password" id="default-card-pw-<?= (int)$pm['id'] ?>" name="auth_password" class="form-control" placeholder="Password" required autocomplete="current-password">
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -360,14 +362,15 @@ function cardIcon(string $brand): string {
                                 <input type="hidden" name="card_id" value="<?= (int)$pm['id'] ?>">
                                 <div class="modal-header">
                                     <h6 class="modal-title">Confirm Removal</h6>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
                                     <p class="small text-muted">
                                         Enter your password to remove
                                         <strong><?= esc($pm['card_brand']) ?> ****<?= esc($pm['card_last_four']) ?></strong>.
                                     </p>
-                                    <input type="password" name="auth_password" class="form-control" placeholder="Password" required>
+                                    <label class="form-label small" for="remove-card-pw-<?= (int)$pm['id'] ?>">Account password</label>
+                                    <input type="password" id="remove-card-pw-<?= (int)$pm['id'] ?>" name="auth_password" class="form-control" placeholder="Password" required autocomplete="current-password">
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -402,20 +405,20 @@ function cardIcon(string $brand): string {
                         <input type="hidden" name="action" value="add_card">
 
                         <div class="mb-2">
-                            <label class="form-label small">Cardholder Name</label>
-                            <input type="text" name="card_holder" class="form-control form-control-sm"
+                            <label class="form-label small" for="profile-add-card-holder">Cardholder Name</label>
+                            <input type="text" id="profile-add-card-holder" name="card_holder" class="form-control form-control-sm"
                                    value="<?= esc(($_POST['action'] ?? '') === 'add_card' ? ($_POST['card_holder'] ?? '') : '') ?>"
-                                   placeholder="John Doe" required>
+                                   placeholder="John Doe" required autocomplete="cc-name">
                         </div>
                         <div class="mb-2">
-                            <label class="form-label small">Card Number</label>
-                            <input type="text" name="card_number" class="form-control form-control-sm"
-                                   placeholder="4242 4242 4242 4242" maxlength="19" required>
+                            <label class="form-label small" for="profile-add-card-number">Card Number</label>
+                            <input type="text" id="profile-add-card-number" name="card_number" class="form-control form-control-sm"
+                                   placeholder="4242 4242 4242 4242" maxlength="19" required autocomplete="cc-number" inputmode="numeric">
                         </div>
                         <div class="row g-2 mb-2">
                             <div class="col-4">
-                                <label class="form-label small">Month</label>
-                                <select name="expiry_month" class="form-select form-select-sm" required>
+                                <label class="form-label small" for="profile-add-exp-month">Month</label>
+                                <select id="profile-add-exp-month" name="expiry_month" class="form-select form-select-sm" required autocomplete="cc-exp-month">
                                     <option value="">MM</option>
                                     <?php for ($m = 1; $m <= 12; $m++): ?>
                                         <option value="<?= $m ?>"><?= str_pad($m, 2, '0', STR_PAD_LEFT) ?></option>
@@ -423,8 +426,8 @@ function cardIcon(string $brand): string {
                                 </select>
                             </div>
                             <div class="col-4">
-                                <label class="form-label small">Year</label>
-                                <select name="expiry_year" class="form-select form-select-sm" required>
+                                <label class="form-label small" for="profile-add-exp-year">Year</label>
+                                <select id="profile-add-exp-year" name="expiry_year" class="form-select form-select-sm" required autocomplete="cc-exp-year">
                                     <option value="">YY</option>
                                     <?php for ($y = (int)date('Y'); $y <= (int)date('Y') + 10; $y++): ?>
                                         <option value="<?= $y ?>"><?= $y ?></option>
@@ -432,15 +435,15 @@ function cardIcon(string $brand): string {
                                 </select>
                             </div>
                             <div class="col-4">
-                                <label class="form-label small">CVV</label>
-                                <input type="text" name="cvv" class="form-control form-control-sm"
-                                       placeholder="123" maxlength="4" required>
+                                <label class="form-label small" for="profile-add-cvv">CVV</label>
+                                <input type="text" id="profile-add-cvv" name="cvv" class="form-control form-control-sm"
+                                       placeholder="123" maxlength="4" required autocomplete="cc-csc" inputmode="numeric">
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small">Confirm Password</label>
-                            <input type="password" name="auth_password" class="form-control form-control-sm"
-                                   placeholder="Enter your account password" required>
+                            <label class="form-label small" for="profile-add-auth-password">Confirm Password</label>
+                            <input type="password" id="profile-add-auth-password" name="auth_password" class="form-control form-control-sm"
+                                   placeholder="Enter your account password" required autocomplete="current-password">
                         </div>
                         <button class="btn btn-sm btn-primary">
                             <i class="bi bi-lock me-1"></i>Save Card
@@ -459,22 +462,22 @@ function cardIcon(string $brand): string {
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="change_password">
                 <div class="mb-3">
-                    <label class="form-label">Current Password</label>
-                    <input type="password" name="old_password"
-                           class="form-control <?= isset($errors['old_password']) ? 'is-invalid' : '' ?>" required>
+                    <label class="form-label" for="profile-old-password">Current Password</label>
+                    <input type="password" id="profile-old-password" name="old_password"
+                           class="form-control <?= isset($errors['old_password']) ? 'is-invalid' : '' ?>" required autocomplete="current-password">
                     <div class="invalid-feedback"><?= esc($errors['old_password'] ?? '') ?></div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">New Password</label>
-                    <input type="password" name="new_password"
-                           class="form-control <?= isset($errors['new_password']) ? 'is-invalid' : '' ?>" required>
+                    <label class="form-label" for="profile-new-password">New Password</label>
+                    <input type="password" id="profile-new-password" name="new_password"
+                           class="form-control <?= isset($errors['new_password']) ? 'is-invalid' : '' ?>" required autocomplete="new-password">
                     <div class="form-text">Min 8 chars, one uppercase letter, one number.</div>
                     <div class="invalid-feedback"><?= esc($errors['new_password'] ?? '') ?></div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Confirm New Password</label>
-                    <input type="password" name="confirm_password"
-                           class="form-control <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" required>
+                    <label class="form-label" for="profile-confirm-password">Confirm New Password</label>
+                    <input type="password" id="profile-confirm-password" name="confirm_password"
+                           class="form-control <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" required autocomplete="new-password">
                     <div class="invalid-feedback"><?= esc($errors['confirm_password'] ?? '') ?></div>
                 </div>
                 <button class="btn btn-warning">Change Password</button>
