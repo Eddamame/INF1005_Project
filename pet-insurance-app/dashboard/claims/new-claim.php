@@ -228,7 +228,8 @@ if (!$claimId && $_SERVER['REQUEST_METHOD'] === 'POST') {
                              id="receipt-dropzone"
                              data-receipt-dropzone
                              data-claim-id="<?= (int) $claimId ?>"
-                             data-file-type="receipt">
+                             data-file-type="receipt"
+                             data-upload-url="<?= base_path() ?>/api/scan-receipt.php">
                             <input type="file" id="receipt-file-input" name="document"
                                    accept="image/*,.pdf" hidden>
                             <i class="bi bi-cloud-arrow-up" style="font-size: 2.5rem; color: var(--ps-teal);"></i>

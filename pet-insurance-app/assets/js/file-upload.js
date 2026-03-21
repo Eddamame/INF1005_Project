@@ -53,6 +53,7 @@
     }
 
     var fileType = zone.getAttribute('data-file-type') || 'receipt';
+    var uploadUrl = zone.getAttribute('data-upload-url') || '/api/scan-receipt.php';
 
     // Clicking the trigger button opens the file dialog
     if (triggerBtn) {
@@ -66,7 +67,7 @@
     fileInput.addEventListener('change', function (e) {
       var file = fileInput.files[0];
       if (!file) return;
-      uploadFile(zone, file, claimId, fileType, statusEl);
+      uploadFile(zone, file, claimId, fileType, statusEl, uploadUrl);
     });
 
     // Drag & drop handlers
@@ -92,7 +93,7 @@
         return;
       }
       var file = dt.files[0];
-      uploadFile(zone, file, claimId, fileType, statusEl);
+      uploadFile(zone, file, claimId, fileType, statusEl, uploadUrl);
     });
   }
 
@@ -114,7 +115,7 @@
     }
   }
 
-  function uploadFile(zone, file, claimId, fileType, statusEl) {
+  function uploadFile(zone, file, claimId, fileType, statusEl, uploadUrl) {
     if (!file) return;
     if (!claimId) {
       setStatus(statusEl, 'Missing claim context; please refresh the page.', 'error');
@@ -137,7 +138,7 @@
     setStatus(statusEl, 'Uploading and scanning receipt…', 'info');
     zone.classList.add('is-uploading');
 
-    fetch('/pet-insurance-app/api/scan-receipt.php', {
+    fetch(uploadUrl || '/api/scan-receipt.php', {
       method: 'POST',
       body: formData,
       headers: {
