@@ -238,5 +238,4 @@ if (empty($plans)) {
     <?php endif; ?>
 
 </main>
-
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
