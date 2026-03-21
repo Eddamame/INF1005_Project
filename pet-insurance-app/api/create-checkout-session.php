@@ -108,7 +108,12 @@ try {
     $autoloadPath = $rootPath . '/vendor/autoload.php';
 
     if (!is_file($autoloadPath)) {
-        json_error('Autoload file missing. System was looking in: ' . $autoloadPath, 503);
+        json_error(
+            'Stripe PHP SDK is not installed (missing vendor/autoload.php). '
+            . 'Open a terminal in the pet-insurance-app folder and run: composer install '
+            . '(install Composer from https://getcomposer.org/ if needed). Path checked: ' . $autoloadPath,
+            503
+        );
     }
 
     require_once $autoloadPath;

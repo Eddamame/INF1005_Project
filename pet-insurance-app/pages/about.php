@@ -109,10 +109,11 @@ require_once __DIR__ . '/../includes/csrf.php';
                 ['name' => 'Dr. Anushka', 'role' => 'Co-Founder & CEO'],
                 ['name' => 'Dr. Eddison', 'role' => 'Co-Founder & CTO'],
                 ['name' => 'Dr. Lideon',  'role' => 'Head of Veterinary Affairs'],
-                ['name' => 'Jun Keat',    'role' => 'Lead AI Engineer'],
+                // photo slug matches asset filename (Jun-Keat.png)
+                ['name' => 'Dr. Jun Keat', 'role' => 'Lead AI Engineer', 'photo' => 'Jun-Keat'],
             ];
             foreach ($team as $member):
-                $slug = str_replace([' ', '.'], ['-', ''], $member['name']);
+                $slug = $member['photo'] ?? str_replace([' ', '.'], ['-', ''], $member['name']);
             ?>
             <li class="col-12 col-sm-6 col-md-3">
                 <article class="team-card text-center p-3 rounded-3 h-100"

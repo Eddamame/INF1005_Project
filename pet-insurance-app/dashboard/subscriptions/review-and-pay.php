@@ -59,6 +59,9 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
     <title>Review &amp; Pay — PawShield</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="<?= esc(generateCsrfToken()); ?>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="<?= base_path() ?>/assets/css/style.css">
@@ -68,15 +71,15 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
 
 <?php require_once __DIR__ . '/../../includes/navbar.php'; ?>
 
-<main id="main-content">
-<div class="container py-5" style="max-width: 960px;">
+<main id="main-content" class="review-pay-page">
+<div class="container py-5 review-pay-inner">
 
-    <a href="<?= base_path() ?>/dashboard/my-pets.php" class="btn btn-outline-secondary btn-sm mb-4">
-        <i class="bi bi-arrow-left me-1"></i> Back to My Pets
+    <a href="<?= base_path() ?>/dashboard/my-pets.php" class="btn btn-outline-secondary btn-sm mb-4 review-pay-back">
+        <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Back to My Pets
     </a>
 
-    <h1 class="mb-2"><i class="bi bi-shield-check me-2"></i>Review &amp; Pay</h1>
-    <p class="text-muted mb-4">
+    <h1 class="mb-2 review-pay-heading"><i class="bi bi-shield-check me-2" aria-hidden="true"></i>Review &amp; Pay</h1>
+    <p class="review-pay-lead mb-4">
         Choose your pet, pick a plan and duration, then proceed to secure Stripe checkout.
     </p>
 
@@ -84,16 +87,16 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
         <?= csrfField() ?>
 
         <!-- Step 1: Choose Pet -->
-        <div class="card mb-4">
+        <div class="card mb-4 review-pay-section">
             <div class="card-body">
-                <h5 class="mb-3"><i class="bi bi-heart-pulse me-2"></i>1. Choose Pet</h5>
+                <h5 class="mb-3"><i class="bi bi-heart-pulse me-2" aria-hidden="true"></i>1. Choose Pet</h5>
                 <?php if (empty($pets)): ?>
-                    <p class="text-muted">
+                    <p class="text-muted mb-0">
                         All your pets already have coverage, or you haven't added any pets yet.
                         <a href="<?= base_path() ?>/dashboard/my-pets.php">Manage pets</a>.
                     </p>
                 <?php else: ?>
-                    <select name="pet_id" id="pet_id" class="form-select" required>
+                    <select name="pet_id" id="pet_id" class="form-select" required autofocus>
                         <option value="">— Select a pet —</option>
                         <?php foreach ($pets as $pet): ?>
                             <option value="<?= (int)$pet['id'] ?>"
@@ -106,12 +109,12 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
             </div>
         </div>
 
-        <!-- Step 2: Choose Plan (cards like purchase-coverage) -->
-        <div class="card mb-4">
+        <!-- Step 2: Choose Plan -->
+        <div class="card mb-4 review-pay-section">
             <div class="card-body">
-                <h5 class="mb-3"><i class="bi bi-shield me-2"></i>2. Choose Plan</h5>
+                <h5 class="mb-3"><i class="bi bi-shield me-2" aria-hidden="true"></i>2. Choose Plan</h5>
                 <?php if (empty($plans)): ?>
-                    <p class="text-muted">No active plans configured.</p>
+                    <p class="text-muted mb-0">No active plans configured.</p>
                 <?php else: ?>
                     <div class="row g-3">
                         <?php
@@ -121,21 +124,24 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
                         ?>
                         <div class="col-md-4">
                             <div class="card h-100 plan-select-card <?= $isSelected ? 'border-primary shadow' : '' ?>"
-                                 style="cursor: pointer;"
-                                 onclick="selectPlan(<?= (int)$plan['id'] ?>, this)">
+                                 role="button"
+                                 tabindex="0"
+                                 aria-pressed="<?= $isSelected ? 'true' : 'false' ?>"
+                                 onclick="selectPlan(<?= (int)$plan['id'] ?>, this)"
+                                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectPlan(<?= (int)$plan['id'] ?>, this);}">
                                 <div class="card-body text-center">
-                                    <i class="bi <?= $planIcons[$i] ?? 'bi-shield' ?> fs-2 text-primary mb-2 d-block"></i>
+                                    <i class="bi <?= $planIcons[$i] ?? 'bi-shield' ?> fs-2 text-primary mb-2 d-block" aria-hidden="true"></i>
                                     <h5 class="card-title"><?= esc($plan['name']) ?></h5>
                                     <div class="mb-2">
                                         <span class="fs-3 fw-bold">$<?= number_format((float)$plan['monthly_premium'], 2) ?></span>
                                         <span class="text-muted">/mo</span>
                                     </div>
                                     <ul class="list-unstyled small text-start">
-                                        <li><i class="bi bi-check-circle-fill text-success me-1"></i>
+                                        <li><i class="bi bi-check-circle-fill text-success me-1" aria-hidden="true"></i>
                                             Up to $<?= number_format((float)$plan['annual_limit']) ?> annual limit</li>
-                                        <li><i class="bi bi-check-circle-fill text-success me-1"></i>
+                                        <li><i class="bi bi-check-circle-fill text-success me-1" aria-hidden="true"></i>
                                             <?= number_format((float)$plan['coverage_pct']) ?>% coverage</li>
-                                        <li><i class="bi bi-check-circle-fill text-success me-1"></i>
+                                        <li><i class="bi bi-check-circle-fill text-success me-1" aria-hidden="true"></i>
                                             $<?= number_format((float)$plan['deductible']) ?> deductible</li>
                                     </ul>
                                     <p class="text-muted small mt-2 mb-0"><?= esc($plan['description']) ?></p>
@@ -151,10 +157,10 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
         </div>
 
        <!-- Step 3: Choose Duration -->
-        <div class="card mb-4">
+        <div class="card mb-4 review-pay-section">
             <div class="card-body">
-                <h5 class="mb-3"><i class="bi bi-calendar-event me-2"></i>3. Choose Duration</h5>
-                <div class="row g-3">
+                <h5 class="mb-3"><i class="bi bi-calendar-event me-2" aria-hidden="true"></i>3. Choose Duration</h5>
+                <div class="row g-3 review-pay-duration">
                     <div class="col-md-4">
                         <div class="form-check border rounded p-3">
                             <input class="form-check-input" type="radio" name="duration" id="dur1" value="1">
@@ -186,11 +192,12 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
             </div>
         </div>
 
-        <!-- Step 4: Summary -->
-        <div class="card border-primary mb-4" id="summaryCard" style="display:none;">
+        <!-- Step 4: Order summary & price breakdown (always visible) -->
+        <div class="card border-primary mb-4 review-pay-summary-wrap" id="summaryCard">
             <div class="card-body">
-                <h5><i class="bi bi-receipt me-2"></i>4. Order Summary</h5>
-                <table class="table table-borderless mb-3">
+                <h5 class="mb-3"><i class="bi bi-receipt me-2" aria-hidden="true"></i>4. Order Summary &amp; Price Breakdown</h5>
+                <p class="small text-muted mb-3" id="summaryHint">Select a plan above to see pricing. Choose a pet to enable payment.</p>
+                <table class="table table-borderless mb-0">
                     <tr><td class="text-muted">Pet</td><td class="fw-semibold" id="summaryPet">—</td></tr>
                     <tr><td class="text-muted">Plan</td><td class="fw-semibold" id="summaryPlan">—</td></tr>
                     <tr><td class="text-muted">Duration</td><td class="fw-semibold" id="summaryDuration">12 months</td></tr>
@@ -213,7 +220,7 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
         </div>
 
         <button type="submit" class="btn btn-primary btn-lg w-100" id="confirm-pay-btn" disabled>
-            <i class="bi bi-lock me-2"></i>Confirm and Pay
+            <i class="bi bi-lock me-2" aria-hidden="true"></i>Confirm and Pay
         </button>
 
         <div class="mt-3 small text-danger" id="review-error" style="display:none;"></div>
@@ -246,8 +253,12 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
         }
         document.querySelectorAll('.plan-select-card').forEach(c => {
             c.classList.remove('border-primary', 'shadow');
+            c.setAttribute('aria-pressed', 'false');
         });
         cardEl.classList.add('border-primary', 'shadow');
+        cardEl.setAttribute('aria-pressed', 'true');
+        var hid = document.getElementById('selectedPlanId');
+        if (hid) hid.dispatchEvent(new Event('change', { bubbles: true }));
         updateSummary();
     }
 
@@ -266,29 +277,48 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
         const plan = plans.find(p => p.id === selectedPlanId);
         const duration = getSelectedDuration();
         const petName = getSelectedPetName();
-        const card = document.getElementById('summaryCard');
         const btn = document.getElementById('confirm-pay-btn');
+        const hint = document.getElementById('summaryHint');
+        const discountRow = document.getElementById('discountRow');
+        const durText = duration + (duration === 1 ? ' month' : ' months');
 
-        if (!plan || !petName) {
-            card.style.display = 'none';
-            btn.disabled = true;
-            return;
+        document.getElementById('summaryDuration').textContent = durText;
+
+        if (btn) btn.disabled = !(plan && petName);
+
+        const petCell = document.getElementById('summaryPet');
+        if (petCell) {
+            if (petName) {
+                petCell.textContent = petName;
+                petCell.className = 'fw-semibold';
+            } else {
+                petCell.textContent = '—';
+                petCell.className = 'fw-semibold text-muted fst-italic';
+            }
         }
 
-        card.style.display = 'block';
-        btn.disabled = false;
+        if (!plan) {
+            document.getElementById('summaryPlan').textContent = '—';
+            document.getElementById('summaryOriginal').textContent = '—';
+            document.getElementById('summaryMonthly').textContent = '—';
+            document.getElementById('summaryTotal').textContent = '—';
+            document.getElementById('summaryFirstMonth').textContent = '—';
+            if (discountRow) discountRow.style.display = 'none';
+            if (hint) {
+                hint.style.display = '';
+                hint.textContent = 'Select a plan in step 2 to see your price breakdown. Choose a pet in step 1 to enable payment.';
+            }
+            return;
+        }
 
         const discount = discounts[duration] || 0;
         const originalMonthly = plan.monthly_premium;
         const discountedMonthly = originalMonthly * (1 - discount);
         const total = discountedMonthly * duration;
 
-        document.getElementById('summaryPet').textContent = petName;
         document.getElementById('summaryPlan').textContent = plan.name;
-        document.getElementById('summaryDuration').textContent = duration + (duration === 1 ? ' month' : ' months');
         document.getElementById('summaryOriginal').textContent = '$' + originalMonthly.toFixed(2) + '/mo';
 
-        const discountRow = document.getElementById('discountRow');
         if (discount > 0) {
             discountRow.style.display = '';
             document.getElementById('summaryDiscount').textContent = '-' + (discount * 100) + '% ($' + (originalMonthly * discount).toFixed(2) + '/mo saved)';
@@ -299,11 +329,20 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
         document.getElementById('summaryMonthly').textContent = '$' + discountedMonthly.toFixed(2) + '/mo';
         document.getElementById('summaryTotal').textContent = '$' + total.toFixed(2);
         document.getElementById('summaryFirstMonth').textContent = '$' + discountedMonthly.toFixed(2);
+
+        if (hint) {
+            if (!petName) {
+                hint.style.display = '';
+                hint.textContent = 'Pricing below is based on your plan and duration. Select a pet in step 1 to enable “Confirm and Pay”.';
+            } else {
+                hint.style.display = 'none';
+            }
+        }
     }
 
     document.querySelectorAll('input[name="duration"]').forEach(r => r.addEventListener('change', updateSummary));
     const petSelect = document.getElementById('pet_id');
     if (petSelect) petSelect.addEventListener('change', updateSummary);
-    if (selectedPlanId) updateSummary();
+    updateSummary();
 </script>
 <script src="<?= base_path() ?>/assets/js/review-pay.js"></script>

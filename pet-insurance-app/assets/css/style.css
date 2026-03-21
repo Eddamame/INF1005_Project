@@ -47,6 +47,12 @@
 
     /* Transitions */
     --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Bootstrap 5 — align utilities (border-primary, text-primary, form checks) with brand */
+    --bs-primary: #0D9488;
+    --bs-primary-rgb: 13, 148, 136;
+    --bs-link-color: var(--ps-teal);
+    --bs-link-hover-color: var(--ps-teal-dark);
 }
 
 /* ── 2. Base Reset & Typography ──────────────────────────── */
@@ -247,6 +253,130 @@ img { max-width: 100%; height: auto; }
 .review-pay-plan-text {
     flex: 1;
     font-size: 0.95rem;
+}
+
+/* Review & Pay — full page layout (subscriptions/checkout) */
+.review-pay-page {
+    background: var(--ps-off-white);
+    padding-bottom: 3rem;
+    min-height: 55vh;
+}
+.review-pay-page .review-pay-inner {
+    max-width: 960px;
+    margin: 0 auto;
+}
+.review-pay-page .review-pay-back.btn-outline-secondary {
+    border-color: var(--ps-gray-300);
+    color: var(--ps-navy);
+    font-weight: 500;
+}
+.review-pay-page .review-pay-back.btn-outline-secondary:hover {
+    background: var(--ps-teal-light);
+    border-color: var(--ps-teal);
+    color: var(--ps-teal-dark);
+}
+.review-pay-page .review-pay-heading {
+    font-family: var(--font-display);
+    color: var(--ps-navy);
+    font-size: clamp(1.65rem, 4vw, 2.15rem);
+    font-weight: 800;
+    line-height: 1.2;
+}
+.review-pay-page .review-pay-heading .bi {
+    color: var(--ps-teal);
+}
+.review-pay-page .review-pay-lead {
+    color: var(--ps-text-muted);
+    font-size: 1.05rem;
+    max-width: 40rem;
+}
+.review-pay-page .review-pay-section.card {
+    border: 1px solid var(--ps-gray-200);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    background: var(--ps-white);
+}
+.review-pay-page .review-pay-section .card-body > h5 {
+    font-family: var(--font-display);
+    color: var(--ps-navy);
+    font-weight: 700;
+    font-size: 1.15rem;
+}
+.review-pay-page .review-pay-section .card-body > h5 .bi {
+    color: var(--ps-teal);
+}
+.review-pay-page .plan-select-card {
+    border: 2px solid var(--ps-gray-200) !important;
+    border-radius: var(--radius-xl) !important;
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+    background: var(--ps-white);
+    cursor: pointer;
+}
+.review-pay-page .plan-select-card:hover {
+    border-color: rgba(13, 148, 136, 0.45) !important;
+    box-shadow: var(--shadow-card);
+    transform: translateY(-2px);
+}
+.review-pay-page .plan-select-card:focus {
+    outline: none;
+}
+.review-pay-page .plan-select-card:focus-visible {
+    outline: 2px solid var(--ps-teal);
+    outline-offset: 2px;
+}
+.review-pay-page .plan-select-card.border-primary {
+    border-color: var(--ps-teal) !important;
+    box-shadow: 0 8px 28px rgba(13, 148, 136, 0.2);
+    background: linear-gradient(160deg, var(--ps-teal-light) 0%, var(--ps-white) 55%);
+}
+.review-pay-page .plan-select-card .card-title {
+    font-family: var(--font-display);
+    color: var(--ps-navy);
+    font-weight: 700;
+}
+.review-pay-page .plan-select-card .fs-3 {
+    color: var(--ps-teal);
+}
+.review-pay-page .review-pay-duration .form-check {
+    border-color: var(--ps-gray-200) !important;
+    border-radius: var(--radius-md);
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    cursor: pointer;
+    background: var(--ps-white);
+}
+.review-pay-page .review-pay-duration .form-check:has(.form-check-input:checked) {
+    border-color: var(--ps-teal) !important;
+    background: var(--ps-teal-light);
+    box-shadow: 0 0 0 1px rgba(13, 148, 136, 0.2);
+}
+.review-pay-page .review-pay-duration .form-check-input:checked {
+    background-color: var(--ps-teal);
+    border-color: var(--ps-teal);
+}
+.review-pay-page #summaryCard.card,
+.review-pay-page #summaryCard.review-pay-summary-wrap {
+    border-width: 2px;
+    border-color: var(--ps-teal) !important;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, rgba(204, 251, 241, 0.35) 0%, var(--ps-white) 45%);
+    box-shadow: 0 8px 32px rgba(13, 148, 136, 0.12);
+}
+.review-pay-page #summaryCard .table {
+    --bs-table-bg: transparent;
+}
+.review-pay-page #summaryCard .card-body > h5 .bi {
+    color: var(--ps-teal);
+}
+.review-pay-page #summaryCard .text-primary {
+    color: var(--ps-teal) !important;
+}
+.review-pay-page #confirm-pay-btn.btn-primary {
+    border-radius: var(--radius-md);
+    padding-top: 0.85rem;
+    padding-bottom: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
 }
 
 /* Breadcrumbs (dashboard) */

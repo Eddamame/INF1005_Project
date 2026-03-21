@@ -139,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <label class="form-label" for="pay-card-holder">Cardholder Name</label>
                                 <input type="text" id="pay-card-holder" name="card_holder" class="form-control"
                                        value="<?= esc($_POST['card_holder'] ?? '') ?>"
-                                       placeholder="John Doe" required autocomplete="cc-name">
+                                       placeholder="John Doe" required autofocus autocomplete="cc-name">
                             </div>
 
                             <div class="mb-3">
