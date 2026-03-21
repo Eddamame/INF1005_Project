@@ -2,6 +2,8 @@
 /**
  * admin/claims.php
  * Phase 3: Admin claim management — filter by status, approve/reject.
+ * - Shows which user submitted each claim
+ * - Prompts admin for a reason when rejecting a claim
  */
 require_once __DIR__ . '/../config/constants.php';
 require_once __DIR__ . '/../config/session.php';
@@ -22,10 +24,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($claimId && in_array($action, ['approve', 'reject'], true)) {
         $newStatus = $action === 'approve' ? 'approved' : 'rejected';
+
+        // For rejections, capture the reason
+        $rejectReason = null;
+        if ($action === 'reject') {
+            $rejectReason = inputString('reject_reason');
+            if (!$rejectReason) {
+                $rejectReason = 'No reason provided.';
+            }
+        }
+
         $stmt = $db->prepare('UPDATE claims SET status = :status WHERE id = :id');
         $stmt->execute([':status' => $newStatus, ':id' => $claimId]);
 
-        // Log the action
+        // Log the action (include rejection reason in details)
+        $logDetails = ['new_status' => $newStatus];
+        if ($rejectReason) {
+            $logDetails['reject_reason'] = $rejectReason;
+        }
+
         $logStmt = $db->prepare("
             INSERT INTO audit_log (user_id, action, entity_type, entity_id, details, ip_address)
             VALUES (:uid, :action, 'claim', :eid, :details, :ip)
@@ -34,11 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':uid'     => $_SESSION['user_id'],
             ':action'  => 'claim_' . $action,
             ':eid'     => $claimId,
-            ':details' => json_encode(['new_status' => $newStatus]),
+            ':details' => json_encode($logDetails),
             ':ip'      => $_SERVER['REMOTE_ADDR'] ?? null,
         ]);
 
         $success = "Claim #{$claimId} has been {$newStatus}.";
+        if ($rejectReason && $action === 'reject') {
+            $success .= " Reason: " . htmlspecialchars($rejectReason, ENT_QUOTES, 'UTF-8');
+        }
     }
 }
 
@@ -149,7 +169,7 @@ function adminClaimBadge(string $status): string {
             <thead class="table-light">
                 <tr>
                     <th>Reference</th>
-                    <th>User</th>
+                    <th>Submitted By</th>
                     <th>Pet</th>
                     <th>Plan</th>
                     <th>Status</th>
@@ -180,15 +200,53 @@ function adminClaimBadge(string $status): string {
                                 <i class="bi bi-check-lg"></i>
                             </button>
                         </form>
-                        <form method="POST" class="d-inline">
-                            <?php csrfField(); ?>
-                            <input type="hidden" name="claim_id" value="<?= (int)$c['id'] ?>">
-                            <input type="hidden" name="action" value="reject">
-                            <button class="btn btn-sm btn-danger" title="Reject"
-                                    onclick="return confirm('Reject this claim?')">
-                                <i class="bi bi-x-lg"></i>
-                            </button>
-                        </form>
+                        <button class="btn btn-sm btn-danger" title="Reject"
+                                data-bs-toggle="modal"
+                                data-bs-target="#rejectModal<?= (int)$c['id'] ?>">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+
+                        <!-- Reject Modal -->
+                        <div class="modal fade" id="rejectModal<?= (int)$c['id'] ?>" tabindex="-1"
+                             aria-labelledby="rejectModalLabel<?= (int)$c['id'] ?>" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form method="POST">
+                                        <?php csrfField(); ?>
+                                        <input type="hidden" name="claim_id" value="<?= (int)$c['id'] ?>">
+                                        <input type="hidden" name="action" value="reject">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="rejectModalLabel<?= (int)$c['id'] ?>">
+                                                Reject Claim <?= esc($c['reference_id']) ?>
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p class="text-muted small mb-2">
+                                                Submitted by <strong><?= esc($c['first_name'] . ' ' . $c['last_name']) ?></strong>
+                                                for <strong><?= esc($c['pet_name']) ?></strong>.
+                                            </p>
+                                            <label for="reject-reason-<?= (int)$c['id'] ?>" class="form-label">
+                                                Reason for rejection <span class="text-danger">*</span>
+                                            </label>
+                                            <textarea
+                                                id="reject-reason-<?= (int)$c['id'] ?>"
+                                                name="reject_reason"
+                                                class="form-control"
+                                                rows="3"
+                                                placeholder="Please provide a reason for rejecting this claim…"
+                                                required></textarea>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="bi bi-x-lg me-1"></i>Reject Claim
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                         <?php else: ?>
                             <span class="text-muted small">Finalized</span>
                         <?php endif; ?>

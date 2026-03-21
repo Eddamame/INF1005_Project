@@ -2,6 +2,7 @@
 /**
  * admin/index.php
  * Phase 3: Admin dashboard with summary stats.
+ * - Recent Claims table now shows which user submitted each claim.
  */
 require_once __DIR__ . '/../config/constants.php';
 require_once __DIR__ . '/../config/session.php';
@@ -23,10 +24,10 @@ $totalQuotes  = (int) $db->query("SELECT COUNT(*) FROM quotes")->fetchColumn();
 $totalClinics = (int) $db->query("SELECT COUNT(*) FROM vet_clinics")->fetchColumn();
 $totalAudit   = (int) $db->query("SELECT COUNT(*) FROM audit_log")->fetchColumn();
 
-// Recent claims
+// Recent claims — includes user info
 $recentClaims = $db->query("
     SELECT c.reference_id, c.status, c.created_at,
-           u.first_name, u.last_name,
+           u.first_name, u.last_name, u.email,
            p.name AS pet_name
     FROM claims c
     JOIN users u ON u.id = c.user_id
@@ -223,7 +224,7 @@ function dashBadge(string $status): string {
                             <thead class="table-light">
                                 <tr>
                                     <th>Reference</th>
-                                    <th>User</th>
+                                    <th>Submitted By</th>
                                     <th>Pet</th>
                                     <th>Status</th>
                                     <th>Date</th>
@@ -236,7 +237,10 @@ function dashBadge(string $status): string {
                                 <?php foreach ($recentClaims as $c): ?>
                                 <tr>
                                     <td><code><?= esc($c['reference_id']) ?></code></td>
-                                    <td><?= esc($c['first_name'] . ' ' . $c['last_name']) ?></td>
+                                    <td>
+                                        <?= esc($c['first_name'] . ' ' . $c['last_name']) ?>
+                                        <br><small class="text-muted"><?= esc($c['email']) ?></small>
+                                    </td>
                                     <td><?= esc($c['pet_name']) ?></td>
                                     <td><?= dashBadge($c['status']) ?></td>
                                     <td class="text-muted small"><?= esc(date('d M Y', strtotime($c['created_at']))) ?></td>

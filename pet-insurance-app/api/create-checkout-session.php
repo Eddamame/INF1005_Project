@@ -10,6 +10,9 @@
  *
  * No subscription record is created here.
  * The subscription is only created in checkout-success.php after payment confirms.
+ *
+ * NOTE: Stripe checkout only charges for 1 month at a time.
+ *       The full duration is stored in metadata for subscription creation.
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -134,8 +137,8 @@ try {
     $discount = $discounts[$duration] ?? 0;
     $discountedMonthly = ((float) $plan['monthly_premium']) * (1 - $discount);
     $totalAmount = $discountedMonthly * $duration;
-    $amountCents = (int) round($totalAmount * 100);
-    if ($amountCents <= 0) {
+    $monthlyCents = (int) round($discountedMonthly * 100);
+    if ($monthlyCents <= 0) {
         json_error('Invalid plan amount.', 400);
     }
 
@@ -146,10 +149,10 @@ try {
     $cancelUrlFull  = $proto . '://' . $host . $baseUrl . 'checkout-cancelled.php';
 
     $durationLabel = $duration . ($duration === 1 ? ' month' : ' months');
-
-    $monthlyCents = (int) round($discountedMonthly * 100);
     $discountText = $discount > 0 ? ' (' . ($discount * 100) . '% off)' : '';
 
+    // Stripe checkout charges ONLY 1 month (first month payment).
+    // The full duration is stored in metadata for subscription record creation.
     $session = $stripe->checkout->sessions->create([
         'mode' => 'payment',
         'customer' => $stripeCustomerId,
@@ -157,12 +160,12 @@ try {
             'price_data' => [
                 'currency' => 'usd',
                 'product_data' => [
-                    'name' => $plan['name'] . ' plan for ' . $pet['name'] . $discountText,
-                    'description' => '$' . number_format($discountedMonthly, 2) . '/mo × ' . $durationLabel . ' = $' . number_format($totalAmount, 2) . ' total',
+                    'name' => $plan['name'] . ' plan for ' . $pet['name'] . ' — 1st month' . $discountText,
+                    'description' => '$' . number_format($discountedMonthly, 2) . '/mo for ' . $durationLabel . ' (total $' . number_format($totalAmount, 2) . ')',
                 ],
                 'unit_amount' => $monthlyCents,
             ],
-            'quantity' => $duration,
+            'quantity' => 1,
         ]],
         'success_url' => $successUrlFull,
         'cancel_url'  => $cancelUrlFull,
