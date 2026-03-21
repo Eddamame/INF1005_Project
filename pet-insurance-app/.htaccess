@@ -1,8 +1,8 @@
 # Custom error pages
-ErrorDocument 401 /pet-insurance-app/pages/401.php
-ErrorDocument 405 /pet-insurance-app/pages/405.php
-ErrorDocument 429 /pet-insurance-app/pages/429.php
-ErrorDocument 404 /pet-insurance-app/pages/404.php
-ErrorDocument 403 /pet-insurance-app/pages/403.php
-ErrorDocument 500 /pet-insurance-app/pages/500.php
-ErrorDocument 503 /pet-insurance-app/pages/503.php
+ErrorDocument 401 /pages/401.php
+ErrorDocument 405 /pages/405.php
+ErrorDocument 429 /pages/429.php
+ErrorDocument 404 /pages/404.php
+ErrorDocument 403 /pages/403.php
+ErrorDocument 500 /pages/500.php
+ErrorDocument 503 /pages/503.php

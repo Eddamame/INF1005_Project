@@ -29,9 +29,15 @@ class AIScanner
         $this->projectId = GCP_PROJECT_ID;
         $this->location  = GCP_LOCATION;
 
-        $this->client = new DocumentProcessorServiceClient([
-            'credentials' => $credentialsPath ?? GCP_CREDENTIALS_PATH,
-        ]);
+        // On GCE with a bound service account, use ADC (no key file needed).
+        // Locally, fall back to GCP_CREDENTIALS_PATH (config/gcp-credentials.json).
+        $clientOptions = [];
+        $resolvedCredentials = $credentialsPath ?? (IS_PRODUCTION ? null : GCP_CREDENTIALS_PATH);
+        if ($resolvedCredentials !== null && file_exists($resolvedCredentials)) {
+            $clientOptions['credentials'] = $resolvedCredentials;
+        }
+
+        $this->client = new DocumentProcessorServiceClient($clientOptions);
     }
 
     /**

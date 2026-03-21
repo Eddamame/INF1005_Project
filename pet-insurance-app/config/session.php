@@ -17,8 +17,10 @@ if (session_status() === PHP_SESSION_NONE) {
     // Prevent JavaScript access to the session cookie (XSS mitigation)
     ini_set('session.cookie_httponly', '1');
 
-    // Only send cookie over HTTPS in production
-    ini_set('session.cookie_secure', IS_PRODUCTION ? '1' : '0');
+    // Only send cookie over HTTPS (disable if serving over plain HTTP)
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+               || ($_SERVER['SERVER_PORT'] ?? 80) == 443;
+    ini_set('session.cookie_secure', $isHttps ? '1' : '0');
 
     // SameSite=Lax prevents the cookie being sent on cross-site subrequests
     ini_set('session.cookie_samesite', 'Lax');

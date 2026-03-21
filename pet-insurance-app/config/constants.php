@@ -38,7 +38,7 @@ define('APP_ENV',       getenv('APP_ENV') ?: 'local');
 define('IS_PRODUCTION', APP_ENV === 'production');
 
 // ── Base path (for subfolder installs, e.g. localhost/pet-insurance-app/) ─
-if (php_sapi_name() === 'cli') {
+if (php_sapi_name() === 'cli' || IS_PRODUCTION) {
     define('BASE_PATH', '');
 } else {
     $script = $_SERVER['SCRIPT_NAME'] ?? '';
