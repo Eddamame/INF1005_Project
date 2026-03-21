@@ -41,7 +41,7 @@ require_once __DIR__ . '/../includes/csrf.php';
             <div class="row justify-content-center text-center">
                 <div class="col-lg-8">
                     <span class="hero-badge">
-                        <i class="bi bi-heart me-1" aria-hidden="true"></i>Our Story
+                        <i class="bi bi-heart me-1" aria-hidden="true"></i>Hi! We’re PawShield.
                     </span>
                     <h1 id="about-hero-heading" class="hero-heading">
                         About PawShield
@@ -59,7 +59,7 @@ require_once __DIR__ . '/../includes/csrf.php';
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6">
-                    <span class="section-label">Who We Are</span>
+                    <span class="section-label">Why We Started PawShield</span>
                     <h2 id="story-heading" class="section-title">Pet insurance, reimagined</h2>
                     <p class="text-body about-story-text">
                         PawShield started with a simple frustration: vet bills are stressful enough without spending hours on claim forms and waiting weeks for a response. We wanted insurance that works the way you live — fast, transparent, and on your phone.
@@ -85,7 +85,7 @@ require_once __DIR__ . '/../includes/csrf.php';
                             </div>
                         </div>
                         <p class="mb-0 small text-muted text-center mx-auto" style="max-width: 28rem;">
-                            Our team includes vets, engineers, and animal lovers who believe every pet deserves access to great care — and every owner deserves a claims process that doesn’t get in the way.
+                            Our team includes vets, tech experts, and animal lovers who believe every pet deserves access to great care — and every owner deserves a claims process that doesn’t get in the way.
                         </p>
                     </div>
                 </div>
@@ -93,37 +93,48 @@ require_once __DIR__ . '/../includes/csrf.php';
         </div>
     </section>
 
-    <!-- Mission -->
-    <section class="py-6" style="background: var(--ps-off-white);" aria-labelledby="mission-heading">
-        <div class="container">
-            <div class="section-header text-center mb-5">
-                <span class="section-label">Our Mission</span>
-                <h2 id="mission-heading" class="section-title">Simple, fast, fair</h2>
-                <p class="section-subtitle">
-                    We’re here to make pet insurance feel less like insurance and more like a safety net that’s there when you need it.
-                </p>
-            </div>
-            <div class="row g-4 justify-content-center">
-                <?php
-                $missions = [
-                    ['icon' => 'bi-lightning-charge-fill', 'title' => 'Instant quotes', 'desc' => 'Upload your receipt and get a detailed reimbursement quote in seconds, not days.'],
-                    ['icon' => 'bi-shield-check',        'title' => 'No hidden fees', 'desc' => 'Clear pricing, clear coverage. What you see is what you get.'],
-                    ['icon' => 'bi-heart-fill',         'title' => 'Built for pets', 'desc' => 'From routine checkups to emergencies, we’re designed around the way you care for your pet.'],
-                ];
-                foreach ($missions as $m): ?>
-                <div class="col-md-4">
-                    <div class="step-card step-card--centered" role="article">
-                        <div class="step-icon" aria-hidden="true">
-                            <i class="bi <?= $m['icon'] ?>"></i>
-                        </div>
-                        <h3 class="step-title"><?= htmlspecialchars($m['title'], ENT_QUOTES, 'UTF-8') ?></h3>
-                        <p class="step-desc"><?= htmlspecialchars($m['desc'], ENT_QUOTES, 'UTF-8') ?></p>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            </div>
+<!-- The PawShield Team -->
+<section class="py-6" style="background: var(--ps-off-white);" aria-labelledby="team-heading">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <span class="section-label">The People Behind PawShield</span>
+            <h2 id="team-heading" class="section-title">Meet the team</h2>
+            <p class="section-subtitle">
+                Pet parents, vets, and builders — united by a love for animals and a drive to make insurance better.
+            </p>
         </div>
-    </section>
+        <ul class="row g-4 justify-content-center list-unstyled" role="list" aria-label="PawShield team members">
+            <?php
+            $team = [
+                ['name' => 'Dr. Anushka', 'role' => 'Co-Founder & CEO'],
+                ['name' => 'Dr. Eddison', 'role' => 'Co-Founder & CTO'],
+                ['name' => 'Dr. Lideon',  'role' => 'Head of Veterinary Affairs'],
+                ['name' => 'Jun Keat',    'role' => 'Lead AI Engineer'],
+            ];
+            foreach ($team as $member):
+                $slug = str_replace([' ', '.'], ['-', ''], $member['name']);
+            ?>
+            <li class="col-12 col-sm-6 col-md-3">
+                <article class="team-card text-center p-3 rounded-3 h-100"
+                         style="background: var(--ps-white); border: 1px solid var(--ps-gray-200);">
+                    <img src="<?= base_path() ?>/assets/images/Team/<?= htmlspecialchars($slug, ENT_QUOTES, 'UTF-8') ?>.png"
+                         alt="<?= htmlspecialchars($member['name'], ENT_QUOTES, 'UTF-8') ?>"
+                         class="team-avatar mx-auto mb-3 d-block"
+                         style="width:288px;height:288px;object-fit:cover;"
+                         width="288"
+                         height="288">
+                    <h3 class="h6 fw-bold mb-1 lh-sm" style="color:var(--ps-navy);">
+                        <?= htmlspecialchars($member['name'], ENT_QUOTES, 'UTF-8') ?>
+                    </h3>
+                    <p class="small text-muted mb-0">
+                        <?= htmlspecialchars($member['role'], ENT_QUOTES, 'UTF-8') ?>
+                    </p>
+                </article>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+</section>
 
     <!-- Why PawShield / Values -->
     <section class="py-6" aria-labelledby="values-heading">
