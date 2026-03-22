@@ -1180,6 +1180,25 @@ img { max-width: 100%; height: auto; }
     font-weight: 700;
     color: var(--ps-white);
     flex-shrink: 0;
+    overflow: hidden;
+}
+
+/* Pet photo in testimonials (when image file exists in assets/images/testimonials/) */
+.author-avatar--pet {
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.12);
+    border: 2px solid rgba(255, 255, 255, 0.22);
+}
+
+.author-avatar--pet img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 50%;
+    display: block;
 }
 
 .testimonial-author strong { color: var(--ps-white); display: block; font-size: 0.9rem; }

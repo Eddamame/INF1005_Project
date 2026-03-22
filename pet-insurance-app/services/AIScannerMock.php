@@ -57,8 +57,21 @@ class AIScannerMock
     private function selectScenario(string $filePath, string $fileType): array
     {
         $scenarios = $this->getScenarios();
-        $keys      = array_keys($scenarios);
-        $index     = crc32($fileType . filesize($filePath)) % count($keys);
+        $base      = strtolower(basename($filePath));
+
+        // Prefer filename hints (tests/fixtures/receipts/*) for reproducible scenarios
+        if (str_contains($base, 'clean') || str_contains($base, 'happy-paws')) {
+            return $scenarios['clean_receipt'];
+        }
+        if (str_contains($base, 'partial') || str_contains($base, 'city-vet')) {
+            return $scenarios['partial_receipt'];
+        }
+        if (str_contains($base, 'poor') || str_contains($base, 'blur') || str_contains($base, 'low-quality')) {
+            return $scenarios['poor_scan'];
+        }
+
+        $keys  = array_keys($scenarios);
+        $index = crc32($fileType . filesize($filePath)) % count($keys);
 
         return $scenarios[$keys[$index]];
     }
