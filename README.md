@@ -17,6 +17,7 @@
 - **Admin dashboard** – Users, claims, audit-style workflows
 - **Clinic verification** – Vet clinic data cross-check (seeded network)
 - **Security** – CSRF, prepared statements, sanitization, password hashing
+- **UX & accessibility** – Mobile hero strip, client-side form validation (`form-validation.js`), larger tap targets on small screens, shared focus/error styles (`accessibility.css`)
 
 ---
 
