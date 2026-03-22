@@ -358,42 +358,42 @@ function renderPetForm(array $errors, array $pet, string $action, array $species
         $speciesOptions .= "<option value=\"{$s}\" {$sel}>" . ucfirst($s) . "</option>";
     }
     ob_start(); ?>
-    <form method="POST" action="<?= base_path() ?>/dashboard/my-pets.php" novalidate>
+    <form method="POST" action="<?= base_path() ?>/dashboard/my-pets.php" novalidate data-validate="pet">
         <?php csrfField(); ?>
         <input type="hidden" name="action" value="<?= esc($action) ?>">
         <?= $hiddenId ?>
         <div class="row g-3">
             <div class="col-md-6">
-                <label class="form-label">Name *</label>
-                <input type="text" name="name"
+                <label class="form-label" for="pet-form-name">Name *</label>
+                <input type="text" id="pet-form-name" name="name"
                        class="form-control <?= isset($errors['name']) ? 'is-invalid' : '' ?>"
-                       value="<?= esc($pet['name'] ?? '') ?>" required>
+                       value="<?= esc($pet['name'] ?? '') ?>" required autocomplete="off">
                 <div class="invalid-feedback"><?= esc($errors['name'] ?? '') ?></div>
             </div>
             <div class="col-md-6">
-                <label class="form-label">Species *</label>
-                <select name="species" class="form-select <?= isset($errors['species']) ? 'is-invalid' : '' ?>" required>
+                <label class="form-label" for="pet-form-species">Species *</label>
+                <select id="pet-form-species" name="species" class="form-select <?= isset($errors['species']) ? 'is-invalid' : '' ?>" required>
                     <option value="">— Select —</option>
                     <?= $speciesOptions ?>
                 </select>
                 <div class="invalid-feedback"><?= esc($errors['species'] ?? '') ?></div>
             </div>
             <div class="col-md-6">
-                <label class="form-label">Breed</label>
-                <input type="text" name="breed" class="form-control"
-                       value="<?= esc($pet['breed'] ?? '') ?>">
+                <label class="form-label" for="pet-form-breed">Breed</label>
+                <input type="text" id="pet-form-breed" name="breed" class="form-control"
+                       value="<?= esc($pet['breed'] ?? '') ?>" autocomplete="off">
             </div>
             <div class="col-md-3">
-                <label class="form-label">Date of Birth</label>
-                <input type="date" name="date_of_birth"
+                <label class="form-label" for="pet-form-dob">Date of Birth</label>
+                <input type="date" id="pet-form-dob" name="date_of_birth"
                        class="form-control <?= isset($errors['dob']) ? 'is-invalid' : '' ?>"
                        value="<?= esc($pet['date_of_birth'] ?? '') ?>">
                 <div class="invalid-feedback"><?= esc($errors['dob'] ?? '') ?></div>
             </div>
             <div class="col-md-3">
-                <label class="form-label">Microchip ID</label>
-                <input type="text" name="microchip_id" class="form-control"
-                       value="<?= esc($pet['microchip_id'] ?? '') ?>">
+                <label class="form-label" for="pet-form-chip">Microchip ID</label>
+                <input type="text" id="pet-form-chip" name="microchip_id" class="form-control"
+                       value="<?= esc($pet['microchip_id'] ?? '') ?>" autocomplete="off">
             </div>
         </div>
         <div class="mt-3">

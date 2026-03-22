@@ -75,5 +75,8 @@
 <?php if (file_exists(__DIR__ . '/../assets/js/app.js')): ?>
 <script src="<?= base_path() ?>/assets/js/app.js"></script>
 <?php endif; ?>
+<?php if (file_exists(__DIR__ . '/../assets/js/form-validation.js')): ?>
+<script src="<?= base_path() ?>/assets/js/form-validation.js"></script>
+<?php endif; ?>
 </body>
 </html>

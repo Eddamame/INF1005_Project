@@ -226,6 +226,16 @@ main a:not(.btn):not(.nav-link):not(.navbar-brand):not(.skip-link):hover {
     outline-color: #DC2626 !important;
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .hero-shape,
+    .float-card,
+    .scan-fill,
+    .hero-mobile-strip__item {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
 /* ── Print styles ──────────────────────────────────────────
    Basic accessible print layout
    ────────────────────────────────────────────────────────── */
@@ -234,7 +244,8 @@ main a:not(.btn):not(.nav-link):not(.navbar-brand):not(.skip-link):hover {
     .pawshield-footer,
     .skip-link,
     .hero-bg-shapes,
-    .hero-card-float {
+    .hero-card-float,
+    .hero-mobile-strip {
         display: none !important;
     }
 

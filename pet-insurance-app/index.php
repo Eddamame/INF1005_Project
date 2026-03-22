@@ -99,6 +99,18 @@ if (empty($plans)) {
                     </div>
                 </div>
             </div>
+            <!-- Mobile / tablet: compact pet-themed strip (desktop keeps floating cards column) -->
+            <div class="row d-lg-none justify-content-center pt-2 pb-1">
+                <div class="col-12 text-center">
+                    <p class="hero-mobile-strip-label text-white-50 small text-uppercase mb-2">Built for dogs, cats &amp; you</p>
+                    <div class="hero-mobile-strip d-flex justify-content-center align-items-center flex-wrap gap-3 gap-md-4" role="presentation">
+                        <span class="hero-mobile-strip__item"><i class="bi bi-heart-pulse" aria-hidden="true"></i><span>Healthy pets</span></span>
+                        <span class="hero-mobile-strip__item"><i class="bi bi-shield-check" aria-hidden="true"></i><span>Clear coverage</span></span>
+                        <span class="hero-mobile-strip__item"><i class="bi bi-cpu" aria-hidden="true"></i><span>AI claims</span></span>
+                        <span class="hero-mobile-strip__item"><i class="bi bi-phone" aria-hidden="true"></i><span>Mobile-first</span></span>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 

@@ -153,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="col-lg-5">
                     <div class="p-4 p-lg-5 rounded-3 shadow-lg auth-form-card">
                         <h1 class="h2 mb-4" style="color: var(--ps-navy);">Create Account</h1>
-                        <form method="POST" novalidate>
+                        <form method="POST" novalidate id="form-register" data-validate="register">
                             <?= csrfField() ?>
 
                             <div class="row g-3">
@@ -172,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="col-12">
                                     <label class="form-label" for="reg-email">Email</label>
                                     <input type="email" id="reg-email" name="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>"
-                                           value="<?= esc($old['email'] ?? '') ?>" required autocomplete="email">
+                                           value="<?= esc($old['email'] ?? '') ?>" required autocomplete="email" inputmode="email">
                                     <div class="invalid-feedback"><?= esc($errors['email'] ?? '') ?></div>
                                 </div>
                                 <div class="col-12">
@@ -183,12 +183,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="col-12">
                                     <label class="form-label" for="register-password">Password</label>
                                     <div class="input-group">
-                                        <input type="password" id="register-password" name="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" required autocomplete="new-password">
+                                        <input type="password" id="register-password" name="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" required autocomplete="new-password" aria-describedby="reg-password-requirements">
                                         <button type="button" class="btn btn-outline-secondary password-toggle" data-target="register-password" aria-label="Show password">
                                             <i class="bi bi-eye"></i>
                                         </button>
                                     </div>
-                                    <div class="form-text">Min 8 chars, one uppercase letter, one number.</div>
+                                    <div class="form-text" id="reg-password-requirements">Min 8 chars, one uppercase letter, one number.</div>
                                     <div class="invalid-feedback"><?= esc($errors['password'] ?? '') ?></div>
                                 </div>
                                 <div class="col-12">
@@ -213,9 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         </label>
                                     </div>
                                     <?php endif; ?>
-                                    <?php if (isset($errors['captcha'])): ?>
-                                        <div class="text-danger small mt-1"><?= esc($errors['captcha']) ?></div>
-                                    <?php endif; ?>
+                                    <div id="reg-captcha-feedback" class="text-danger small mt-1<?= empty($errors['captcha']) ? ' d-none' : '' ?>" role="alert"><?= esc($errors['captcha'] ?? '') ?></div>
                                 </div>
                             </div>
 

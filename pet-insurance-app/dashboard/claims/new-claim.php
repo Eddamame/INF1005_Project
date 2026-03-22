@@ -175,12 +175,12 @@ if (!$claimId && $_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <a href="<?= base_path() ?>/dashboard/my-pets.php">Go to My Pets</a> to purchase coverage.
                             </div>
                         <?php else: ?>
-                            <form method="POST" novalidate>
+                            <form method="POST" novalidate data-validate="new-claim">
                                 <?= csrfField() ?>
 
                                 <div class="mb-3">
-                                    <label class="form-label">Pet & Policy</label>
-                                    <select name="subscription_id"
+                                    <label class="form-label" for="new-claim-subscription">Pet & Policy</label>
+                                    <select id="new-claim-subscription" name="subscription_id"
                                             class="form-select <?= isset($errors['subscription_id']) ? 'is-invalid' : '' ?>" required>
                                         <option value="">— Select a pet with an active policy —</option>
                                         <?php foreach ($petsWithPolicies as $pp): ?>
