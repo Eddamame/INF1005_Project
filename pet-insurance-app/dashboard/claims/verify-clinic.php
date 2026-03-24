@@ -2,12 +2,10 @@
 /**
  * dashboard/claims/verify-clinic.php
  *
- * Re-runs ClinicVerifier for the latest quote on a claim using the latest
- * completed AI scan data.
  *
  * IMPORTANT:
- *  - This does NOT modify claims.status (admin lifecycle only).
- *  - It only updates quotes.clinic_verified.
+ *  - This does NOT modify claims.status.
+ *  - Only updates quotes.clinic_verified.
  */
 
 require_once __DIR__ . '/../../config/constants.php';

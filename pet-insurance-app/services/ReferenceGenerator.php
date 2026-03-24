@@ -8,16 +8,6 @@
  *
  * These are human-readable IDs shown to customers (not the database PK).
  * The hex suffix makes collisions virtually impossible.
- *
- * Usage:
- *   require_once __DIR__ . '/../services/ReferenceGenerator.php';
- *
- *   $claimRef = ReferenceGenerator::claim();   // "CLM-20260310-A7F3B2"
- *   $quoteRef = ReferenceGenerator::quote();   // "QUO-20260310-E1D4C8"
- *
- *   // Or verify uniqueness against the DB:
- *   $claimRef = ReferenceGenerator::uniqueClaim($db);
- *   $quoteRef = ReferenceGenerator::uniqueQuote($db);
  */
 
 class ReferenceGenerator

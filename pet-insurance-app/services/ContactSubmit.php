@@ -2,20 +2,11 @@
 /**
  * ContactSubmit — handles safe contact form submissions.
  *
- * This is a thin service used by pages/contact.php.
+ * Used by pages/contact.php.
  * It expects:
  *   - A valid PDO instance ($db) connected to the pet_insurance DB
  *   - CSRF to be validated by the caller (requireValidCsrf())
  *   - Sanitization helpers from includes/sanitize.php
- *
- * Usage in contact.php:
- *
- *   require_once __DIR__ . '/../services/ContactSubmit.php';
- *   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
- *       requireValidCsrf();
- *       $result = ContactSubmit::handle($db);
- *       // $result['success'], $result['errors']
- *   }
  */
 
 require_once __DIR__ . '/../includes/sanitize.php';

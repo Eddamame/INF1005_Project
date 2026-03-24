@@ -5,7 +5,7 @@
  * RULES FOR THE TEAM:
  *   1. EVERY user input goes through inputString() or inputInt() before use.
  *   2. EVERY variable echoed into HTML goes through esc().
- *   3. NO exceptions. Ever.
+ *   3. NEVER trust user input, even if it looks fine.
  *
  * Usage:
  *   require_once __DIR__ . '/../includes/sanitize.php';

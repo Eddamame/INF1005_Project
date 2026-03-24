@@ -9,7 +9,7 @@
  *   - Mark whether the clinic is recognized/verified.
  *   - Optionally update the quotes table (clinic_verified flag).
  *
- * This service does NOT change claim status directly; it only sets
+ * Does NOT change claim status directly; it only sets
  * the verification flag on a specific quote, so that admin review
  * can make the final decision.
  */
@@ -35,6 +35,7 @@ class ClinicVerifier
         try {
             $clinic = $this->findClinic($parsedData);
             $verified = $clinic !== null && (int) ($clinic['is_verified'] ?? 0) === 1;
+            error_log('ClinicVerifier: verified=' . ($verified ? 'true' : 'false') . ' quoteId=' . $quoteId);
 
             $stmt = $this->db->prepare('UPDATE quotes SET clinic_verified = :flag WHERE id = :id');
             $stmt->execute([
@@ -89,18 +90,21 @@ class ClinicVerifier
                 return $row;
             }
         }
+        error_log('ClinicVerifier: code=' . $code . ' name=' . $name);
 
-        // 2. Fuzzy name match (simple LIKE for now)
+        // 2. Fuzzy name match — check both directions (DB name contains extracted, or extracted contains DB name)
         if ($name !== '') {
             $stmt = $this->db->prepare('
                 SELECT *
                 FROM vet_clinics
                 WHERE LOWER(name) LIKE LOWER(:name)
+                   OR LOWER(:name2) LIKE CONCAT(\'%\', LOWER(name), \'%\')
                 ORDER BY is_verified DESC, id ASC
                 LIMIT 1
             ');
-            $stmt->execute([':name' => '%' . $name . '%']);
+            $stmt->execute([':name' => '%' . $name . '%', ':name2' => $name]);
             $row = $stmt->fetch();
+            error_log('ClinicVerifier: row=' . json_encode($row));
             if ($row) {
                 return $row;
             }

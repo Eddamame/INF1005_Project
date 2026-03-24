@@ -7,22 +7,6 @@
  *   2. Every HTML form includes the token as a hidden field.
  *   3. Every POST handler validates the token before processing.
  *   4. If the token doesn't match, the request is rejected.
- *
- * USAGE IN FORMS (Member B — just copy this into every <form>):
- *
- *   <form method="POST" action="...">
- *       <?php csrfField(); ?>
- *       <!-- rest of form -->
- *   </form>
- *
- * USAGE IN POST HANDLERS (Member A — call this at the top):
- *
- *   require_once __DIR__ . '/../includes/csrf.php';
- *   requireValidCsrf();  // Exits with 403 if invalid
- *
- * USAGE IN AJAX (file-upload.js reads the meta tag):
- *
- *   <meta name="csrf-token" content="<?php echo esc(generateCsrfToken()); ?>">
  */
 
 /**

@@ -2,12 +2,9 @@
 /**
  * AIScannerFactory — returns the correct scanner based on AI_SCANNER_MODE.
  *
- * This is the ONLY file the rest of the app should use to get a scanner.
- * Everything else calls: $scanner = AIScannerFactory::create();
- *
  * Switching between mock and live is a single config change:
- *   AI_SCANNER_MODE=mock  →  AIScannerMock  (Phases 0-3)
- *   AI_SCANNER_MODE=live  →  AIScanner      (Phase 4+)
+ *   AI_SCANNER_MODE=mock  →  AIScannerMock  
+ *   AI_SCANNER_MODE=live  →  AIScanner      
  *
  * Both classes implement the same scanDocument() method and return
  * the exact same response shape, so no other code needs to change.

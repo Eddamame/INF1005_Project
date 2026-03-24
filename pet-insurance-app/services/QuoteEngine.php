@@ -2,7 +2,7 @@
 /**
  * QuoteEngine — calculates claim payout quotes from AI-parsed vet receipts.
  *
- * Data flow (Phase 1+):
+ * Data flow:
  *   1. Document is uploaded + scanned by Document AI → parsed_data
  *   2. A Claim is created and linked to one or more ClaimDocuments.
  *   3. QuoteEngine reads:
@@ -15,17 +15,6 @@
  *        - covered_amount
  *        - customer_pays
  *        - line_items (JSON payload suitable for UI)
- *
- * Usage (simple):
- *   require_once __DIR__ . '/../services/QuoteEngine.php';
- *   $engine = new QuoteEngine($db);
- *   $quote  = $engine->generateForClaim($claimId);
- *
- *   if ($quote['success']) {
- *       // $quote['quote_id'], $quote['reference_id'], etc.
- *   } else {
- *       // $quote['error']
- *   }
  */
 
 require_once __DIR__ . '/../config/constants.php';
@@ -278,14 +267,17 @@ class QuoteEngine
             ':status'         => 'draft',
         ]);
 
+        // Use SELECT LAST_INSERT_ID() to avoid PDO::lastInsertId() returning 0
+        // with PDO::ATTR_EMULATE_PREPARES => false on some MySQL/PHP versions.
+        $quoteId = (int) $this->db->query('SELECT LAST_INSERT_ID()')->fetchColumn();
+
         // Also mark claim as "quoted"
         $upd = $this->db->prepare('UPDATE claims SET status = :status WHERE id = :id');
         $upd->execute([
             ':status' => 'quoted',
             ':id'     => $claimId,
         ]);
-
-        return (int) $this->db->lastInsertId();
+        return $quoteId;
     }
 
     private function error(string $message): array
