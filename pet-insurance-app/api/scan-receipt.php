@@ -8,7 +8,9 @@
  *   - Secure file upload to /uploads using FileUploadHandler
  *   - AI scan via AIScannerFactory (mock or live)
  *   - Persists claim_documents row with AI metadata
- *   - Updates the parent claim with extracted fields
+ *   - Checks confidence against AUTO_APPROVE_CONFIDENCE_THRESHOLD:
+ *       >= threshold → claim status = 'scanned' (user can generate quote)
+ *       <  threshold → claim status = 'rejected' (user must resubmit)
  *   - Returns a JSON payload for the dashboard UI
  *
  * Expects a multipart/form-data POST with:
@@ -84,8 +86,9 @@ try {
         json_error('Claim not found.', 404);
     }
 
-    // Optional: restrict which statuses can be scanned
-    $allowedStatuses = ['draft', 'scanning', 'scanned', 'quoted'];
+    // Allow scanning on draft, scanning, scanned, quoted, AND rejected
+    // (rejected claims can be rescanned with a better document)
+    $allowedStatuses = ['draft', 'scanning', 'scanned', 'quoted', 'rejected'];
     if (!in_array($claim['status'], $allowedStatuses, true)) {
         json_error('This claim cannot accept new documents in its current status.', 409, [
             'current_status' => $claim['status'],
@@ -194,39 +197,46 @@ try {
     $documentId = (int) $db->lastInsertId();
 } catch (Throwable $e) {
     error_log('scan-receipt: failed saving claim_documents: ' . $e->getMessage());
-    // Even if this fails, don't leak internal details to the client
     json_error('Failed to record scan results. Please try again later.', 500);
 }
 
-// Update parent claim with extracted fields where helpful -------
+// ── Confidence gate ────────────────────────────────────────────
+// Check whether the scan confidence meets the auto-approval threshold.
+// If it does: claim moves to 'scanned' and user can generate a quote.
+// If not: claim is set to 'rejected' and user is told to resubmit.
+$threshold     = defined('AUTO_APPROVE_CONFIDENCE_THRESHOLD') ? AUTO_APPROVE_CONFIDENCE_THRESHOLD : 0.80;
+$confidenceMet = $success && ($confidence >= $threshold);
+
+// Update parent claim with extracted fields ---------------------
 try {
     $clinicCode = $parsed['clinic_code'] ?? null;
     $visitDate  = $parsed['visit_date'] ?? null;
 
-    $updateFields = [
-        'status' => $success ? 'scanned' : 'rejected',
-    ];
+    if ($confidenceMet) {
+        $newStatus = 'scanned';
+    } elseif ($success) {
+        // Scan succeeded but confidence too low
+        $newStatus = 'rejected';
+    } else {
+        // Scan itself failed
+        $newStatus = 'rejected';
+    }
+
     $params = [
         ':id'     => $claimId,
-        ':status' => $updateFields['status'],
+        ':status' => $newStatus,
     ];
 
+    $setSql = 'status = :status';
+
     if ($clinicCode) {
-        $updateFields['clinic_code'] = $clinicCode;
-        $params[':clinic_code']      = $clinicCode;
+        $setSql .= ', clinic_code = :clinic_code';
+        $params[':clinic_code'] = $clinicCode;
     }
 
     if ($visitDate) {
-        $updateFields['visit_date'] = $visitDate;
-        $params[':visit_date']      = $visitDate;
-    }
-
-    $setSql = 'status = :status';
-    if (isset($updateFields['clinic_code'])) {
-        $setSql .= ', clinic_code = :clinic_code';
-    }
-    if (isset($updateFields['visit_date'])) {
         $setSql .= ', visit_date = :visit_date';
+        $params[':visit_date'] = $visitDate;
     }
 
     $sql = 'UPDATE claims SET ' . $setSql . ' WHERE id = :id';
@@ -237,11 +247,32 @@ try {
     // Non-fatal for client; continue
 }
 
+// Audit log for low-confidence rejection
+if ($success && !$confidenceMet) {
+    try {
+        $db->prepare("
+            INSERT INTO audit_log (user_id, action, entity_type, entity_id, details, ip_address)
+            VALUES (:uid, 'scan_confidence_rejected', 'claim', :eid, :details, :ip)
+        ")->execute([
+            ':uid'     => (int) ($_SESSION['user_id'] ?? 0),
+            ':eid'     => $claimId,
+            ':details' => json_encode([
+                'confidence' => round($confidence, 4),
+                'threshold'  => $threshold,
+                'document_id'=> $documentId,
+            ]),
+            ':ip'      => $_SERVER['REMOTE_ADDR'] ?? null,
+        ]);
+    } catch (Throwable $e) {
+        error_log('scan-receipt: audit log failed: ' . $e->getMessage());
+    }
+}
+
 // Final JSON response -------------------------------------------
 json_success([
-    'claim_id'     => $claimId,
-    'document_id'  => $documentId,
-    'file'         => [
+    'claim_id'       => $claimId,
+    'document_id'    => $documentId,
+    'file'           => [
         'name'         => $uploadResult['file_name'],
         'original'     => $uploadResult['original_name'],
         'relativePath' => $uploadResult['relative_path'],
@@ -249,14 +280,15 @@ json_success([
         'size'         => $uploadResult['file_size'],
         'file_type'    => $uploadResult['file_type'],
     ],
-    'scan'         => [
-        'success'        => $success,
-        'parsed_data'    => $parsed,
-        'entities'       => $entities,
-        'full_text'      => $fullText,
-        'confidence'     => $confidence,
-        'processor_used' => $processor,
-        'error'          => $scanErrorMsg,
+    'scan'           => [
+        'success'          => $success,
+        'parsed_data'      => $parsed,
+        'entities'         => $entities,
+        'full_text'        => $fullText,
+        'confidence'       => $confidence,
+        'processor_used'   => $processor,
+        'error'            => $scanErrorMsg,
+        'confidence_met'   => $confidenceMet,
+        'threshold'        => $threshold,
     ],
 ]);
-

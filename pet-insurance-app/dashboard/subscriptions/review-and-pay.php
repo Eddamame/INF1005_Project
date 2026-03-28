@@ -16,8 +16,6 @@ $errors = [];
 $selectedPlanId = inputInt('plan_id', 'GET');
 $selectedPetId  = inputInt('pet_id', 'GET');
 
-// Load user's pets WITHOUT active/pending subscriptions
-// Load user's pets WITHOUT active subscriptions (or with subscriptions expiring within 30 days)
 // Load user's pets that are eligible for purchase/renewal
 $pets = [];
 if ($db instanceof PDO) {
@@ -156,26 +154,17 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
             </div>
         </div>
 
-       <!-- Step 3: Choose Duration -->
+       <!-- Step 3: Choose Duration (6 / 12 / 18 months) -->
         <div class="card mb-4 review-pay-section">
             <div class="card-body">
                 <h5 class="mb-3"><i class="bi bi-calendar-event me-2" aria-hidden="true"></i>3. Choose Duration</h5>
                 <div class="row g-3 review-pay-duration">
                     <div class="col-md-4">
                         <div class="form-check border rounded p-3">
-                            <input class="form-check-input" type="radio" name="duration" id="dur1" value="1">
-                            <label class="form-check-label w-100" for="dur1">
-                                <strong>1 Month</strong>
-                                <span class="text-muted d-block small">No discount</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-check border rounded p-3">
                             <input class="form-check-input" type="radio" name="duration" id="dur6" value="6">
                             <label class="form-check-label w-100" for="dur6">
                                 <strong>6 Months</strong>
-                                <span class="text-success d-block small fw-semibold">5% discount</span>
+                                <span class="text-muted d-block small">No discount</span>
                             </label>
                         </div>
                     </div>
@@ -184,6 +173,15 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
                             <input class="form-check-input" type="radio" name="duration" id="dur12" value="12" checked>
                             <label class="form-check-label w-100" for="dur12">
                                 <strong>12 Months</strong>
+                                <span class="text-success d-block small fw-semibold">5% discount</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check border rounded p-3">
+                            <input class="form-check-input" type="radio" name="duration" id="dur18" value="18">
+                            <label class="form-check-label w-100" for="dur18">
+                                <strong>18 Months</strong>
                                 <span class="text-success d-block small fw-semibold">10% discount</span>
                             </label>
                         </div>
@@ -192,7 +190,7 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
             </div>
         </div>
 
-        <!-- Step 4: Order summary & price breakdown (always visible) -->
+        <!-- Step 4: Order summary & price breakdown -->
         <div class="card border-primary mb-4 review-pay-summary-wrap" id="summaryCard">
             <div class="card-body">
                 <h5 class="mb-3"><i class="bi bi-receipt me-2" aria-hidden="true"></i>4. Order Summary &amp; Price Breakdown</h5>
@@ -240,7 +238,7 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
         ];
     }, $plans)) ?>;
 
-    const discounts = { 1: 0, 6: 0.05, 12: 0.10 };
+    const discounts = { 6: 0, 12: 0.05, 18: 0.10 };
 
     let selectedPlanId = document.getElementById('selectedPlanId')
         ? (document.getElementById('selectedPlanId').value ? parseInt(document.getElementById('selectedPlanId').value) : null)
@@ -333,7 +331,7 @@ $selectedPet  = $selectedPetId  ? findById($pets, $selectedPetId)   : null;
         if (hint) {
             if (!petName) {
                 hint.style.display = '';
-                hint.textContent = 'Pricing below is based on your plan and duration. Select a pet in step 1 to enable “Confirm and Pay”.';
+                hint.textContent = 'Pricing below is based on your plan and duration. Select a pet in step 1 to enable "Confirm and Pay".';
             } else {
                 hint.style.display = 'none';
             }

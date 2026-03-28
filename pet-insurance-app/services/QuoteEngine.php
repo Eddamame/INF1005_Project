@@ -2,19 +2,13 @@
 /**
  * QuoteEngine — calculates claim payout quotes from AI-parsed vet receipts.
  *
- * Data flow:
- *   1. Document is uploaded + scanned by Document AI → parsed_data
- *   2. A Claim is created and linked to one or more ClaimDocuments.
- *   3. QuoteEngine reads:
- *        - The customer's active subscription/plan
- *        - The AI-parsed monetary data (total, line_items)
- *   4. It applies: deductible + coverage_pct → computes:
- *        - total_vet_cost
- *        - deductible
- *        - coverage_pct
- *        - covered_amount
- *        - customer_pays
- *        - line_items (JSON payload suitable for UI)
+ * Updated workflow:
+ *   1. Document is uploaded + scanned by Document AI → parsed_data + confidence
+ *   2. QuoteEngine reads the plan, applies deductible + coverage_pct
+ *   3. Based on AI scan confidence vs AUTO_APPROVE_CONFIDENCE_THRESHOLD:
+ *        - >= threshold → quote status = 'approved', claim status = 'approved'
+ *        - <  threshold → quote status = 'rejected', claim status = 'rejected'
+ *   4. Admin can still flag/suspend claims after the fact if needed.
  */
 
 require_once __DIR__ . '/../config/constants.php';
@@ -31,6 +25,7 @@ class QuoteEngine
 
     /**
      * Generate (or regenerate) a quote for a given claim.
+     * Auto-approves or auto-rejects based on AI confidence.
      *
      * @param  int $claimId
      * @return array  ['success' => bool, ...]
@@ -53,6 +48,9 @@ class QuoteEngine
                 return $this->error('No AI scan data available for this claim.');
             }
 
+            // Get the confidence from the latest completed scan document
+            $confidence = $this->loadLatestConfidence($claimId);
+
             $calc = $this->calculatePayout(
                 $aiData['total'] ?? null,
                 $aiData['line_items'] ?? [],
@@ -65,20 +63,44 @@ class QuoteEngine
                 return $calc;
             }
 
-            $quoteId = $this->persistQuote($claimId, $calc, $aiData, $plan);
+            // Confidence is already gated at the scan stage (scan-receipt.php).
+            // If a claim reaches quote generation, it means confidence >= threshold,
+            // so quotes are always auto-approved here.
+            $threshold = defined('AUTO_APPROVE_CONFIDENCE_THRESHOLD')
+                ? AUTO_APPROVE_CONFIDENCE_THRESHOLD
+                : 0.80;
+
+            // Safety check: verify confidence still meets threshold
+            // (in case claim was manually moved to 'scanned' by admin)
+            $autoApproved = $confidence >= $threshold;
+            $quoteStatus  = $autoApproved ? 'approved' : 'rejected';
+            $claimStatus  = $autoApproved ? 'approved' : 'rejected';
+
+            $quoteId = $this->persistQuote($claimId, $calc, $aiData, $plan, $quoteStatus);
+
+            // Update claim status to match
+            $upd = $this->db->prepare('UPDATE claims SET status = :status WHERE id = :id');
+            $upd->execute([':status' => $claimStatus, ':id' => $claimId]);
+
+            // Audit log entry for auto-decision
+            $this->logAutoDecision($claimId, $quoteId, $confidence, $threshold, $autoApproved);
 
             return [
-                'success'       => true,
-                'quote_id'      => $quoteId,
-                'reference_id'  => $calc['reference_id'],
-                'claim_id'      => $claimId,
-                'total_vet_cost'=> $calc['total_vet_cost'],
-                'deductible'    => $calc['deductible'],
-                'coverage_pct'  => $calc['coverage_pct'],
-                'covered_amount'=> $calc['covered_amount'],
-                'customer_pays' => $calc['customer_pays'],
-                'line_items'    => $calc['line_items'],
-                'plan'          => [
+                'success'        => true,
+                'quote_id'       => $quoteId,
+                'reference_id'   => $calc['reference_id'],
+                'claim_id'       => $claimId,
+                'total_vet_cost' => $calc['total_vet_cost'],
+                'deductible'     => $calc['deductible'],
+                'coverage_pct'   => $calc['coverage_pct'],
+                'covered_amount' => $calc['covered_amount'],
+                'customer_pays'  => $calc['customer_pays'],
+                'line_items'     => $calc['line_items'],
+                'auto_approved'  => $autoApproved,
+                'confidence'     => $confidence,
+                'quote_status'   => $quoteStatus,
+                'claim_status'   => $claimStatus,
+                'plan'           => [
                     'id'             => (int) $plan['id'],
                     'name'           => $plan['name'],
                     'annual_limit'   => (float) $plan['annual_limit'],
@@ -148,14 +170,26 @@ class QuoteEngine
     }
 
     /**
+     * Load the AI confidence score from the latest completed scan document.
+     */
+    private function loadLatestConfidence(int $claimId): float
+    {
+        $stmt = $this->db->prepare('
+            SELECT ai_confidence
+            FROM claim_documents
+            WHERE claim_id = :cid
+              AND scan_status = \'completed\'
+            ORDER BY uploaded_at DESC
+            LIMIT 1
+        ');
+        $stmt->execute([':cid' => $claimId]);
+        $row = $stmt->fetch();
+
+        return $row ? (float) ($row['ai_confidence'] ?? 0.0) : 0.0;
+    }
+
+    /**
      * Core payout math.
-     *
-     * @param  float|null $aiTotal
-     * @param  array      $aiLineItems
-     * @param  float      $deductible
-     * @param  float      $coveragePct
-     * @param  float      $annualLimit
-     * @return array
      */
     private function calculatePayout(
         ?float $aiTotal,
@@ -164,7 +198,6 @@ class QuoteEngine
         float $coveragePct,
         float $annualLimit
     ): array {
-        // Fallback: recompute total from line items if needed
         if ($aiTotal === null) {
             $sum = 0.0;
             foreach ($aiLineItems as $item) {
@@ -180,22 +213,18 @@ class QuoteEngine
 
         $totalVetCost = $aiTotal;
 
-        // Apply deductible (cannot exceed total)
         $effectiveDeductible = min($deductible, $totalVetCost);
         $afterDeductible     = max(0.0, $totalVetCost - $effectiveDeductible);
 
-        // Apply coverage percentage
         $coverageFraction = max(0.0, min(1.0, $coveragePct / 100.0));
         $coveredAmount    = $afterDeductible * $coverageFraction;
 
-        // Apply annual limit
         if ($annualLimit > 0 && $coveredAmount > $annualLimit) {
             $coveredAmount = $annualLimit;
         }
 
         $customerPays = $totalVetCost - $coveredAmount;
 
-        // Normalize line items for JSON storage
         $normalizedItems = [];
         foreach ($aiLineItems as $item) {
             $normalizedItems[] = [
@@ -221,12 +250,14 @@ class QuoteEngine
 
     /**
      * Persist quote row and return its ID.
+     * Now accepts a status parameter for auto-approve/reject.
      */
     private function persistQuote(
         int $claimId,
         array $calc,
         array $aiData,
-        array $plan
+        array $plan,
+        string $quoteStatus = 'draft'
     ): int {
         $stmt = $this->db->prepare('
             INSERT INTO quotes (
@@ -239,7 +270,8 @@ class QuoteEngine
                 customer_pays,
                 line_items,
                 clinic_verified,
-                status
+                status,
+                reviewed_at
             ) VALUES (
                 :ref,
                 :claim_id,
@@ -250,7 +282,8 @@ class QuoteEngine
                 :customer_pays,
                 :line_items,
                 :clinic_verified,
-                :status
+                :status,
+                :reviewed_at
             )
         ');
 
@@ -263,21 +296,45 @@ class QuoteEngine
             ':covered_amount' => $calc['covered_amount'],
             ':customer_pays'  => $calc['customer_pays'],
             ':line_items'     => json_encode($calc['line_items']),
-            ':clinic_verified'=> 0, // ClinicVerifier may update this later
-            ':status'         => 'draft',
+            ':clinic_verified'=> 0,
+            ':status'         => $quoteStatus,
+            ':reviewed_at'    => ($quoteStatus !== 'draft') ? date('Y-m-d H:i:s') : null,
         ]);
 
-        // Use SELECT LAST_INSERT_ID() to avoid PDO::lastInsertId() returning 0
-        // with PDO::ATTR_EMULATE_PREPARES => false on some MySQL/PHP versions.
         $quoteId = (int) $this->db->query('SELECT LAST_INSERT_ID()')->fetchColumn();
 
-        // Also mark claim as "quoted"
-        $upd = $this->db->prepare('UPDATE claims SET status = :status WHERE id = :id');
-        $upd->execute([
-            ':status' => 'quoted',
-            ':id'     => $claimId,
-        ]);
         return $quoteId;
+    }
+
+    /**
+     * Log the auto-approval/rejection decision to audit_log.
+     */
+    private function logAutoDecision(
+        int $claimId,
+        int $quoteId,
+        float $confidence,
+        float $threshold,
+        bool $approved
+    ): void {
+        try {
+            $stmt = $this->db->prepare("
+                INSERT INTO audit_log (user_id, action, entity_type, entity_id, details, ip_address)
+                VALUES (NULL, :action, 'claim', :eid, :details, :ip)
+            ");
+            $stmt->execute([
+                ':action'  => $approved ? 'auto_approve' : 'auto_reject',
+                ':eid'     => $claimId,
+                ':details' => json_encode([
+                    'quote_id'   => $quoteId,
+                    'confidence' => round($confidence, 4),
+                    'threshold'  => $threshold,
+                    'decision'   => $approved ? 'approved' : 'rejected',
+                ]),
+                ':ip'      => $_SERVER['REMOTE_ADDR'] ?? null,
+            ]);
+        } catch (Throwable $e) {
+            error_log('QuoteEngine::logAutoDecision error: ' . $e->getMessage());
+        }
     }
 
     private function error(string $message): array
@@ -288,4 +345,3 @@ class QuoteEngine
         ];
     }
 }
-

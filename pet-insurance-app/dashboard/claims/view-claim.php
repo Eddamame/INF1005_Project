@@ -2,6 +2,7 @@
 /**
  * dashboard/claims/view-claim.php
  * View a claim's details, uploaded documents, AI scan results, and quotes.
+ * Updated: shows auto-approve/reject decision and flagged/suspended states.
  */
 require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../config/session.php';
@@ -79,27 +80,22 @@ foreach ($documents as $doc) {
     }
 }
 
-// Clinic verification (derived from latest quote; we do not change claims.status here)
+// Clinic verification
 $latestQuote = !empty($quotes) ? $quotes[0] : null;
 $clinicVerified = $latestQuote ? ((int) ($latestQuote['clinic_verified'] ?? 0) === 1) : null;
 
-// UX improvement: auto re-check clinic verification on page load (no admin action).
-// This is safe because it only updates `quotes.clinic_verified` and does NOT change `claims.status`.
+// Auto re-check clinic verification on page load
 if ($latestQuote && $clinicVerified === false && $latestCompleted) {
     $latestQuoteId = (int) ($latestQuote['id'] ?? 0);
     if ($latestQuoteId > 0 && (!empty($parsed['clinic_code']) || !empty($claim['clinic_code']))) {
-        // Ensure we have the clinic_code in parsed data (fallback to claim's stored clinic_code).
         if (empty($parsed['clinic_code']) && !empty($claim['clinic_code'])) {
             $parsed['clinic_code'] = $claim['clinic_code'];
         }
-
         try {
             $verifier = new ClinicVerifier($db);
             $verification = $verifier->verifyForQuote($latestQuoteId, $parsed);
             $clinicVerified = (bool) ($verification['verified'] ?? false);
-            // Refresh latestQuote value from DB isn't necessary; `clinicVerified` drives the UI.
         } catch (Throwable $e) {
-            // Non-fatal: if re-verification fails, we still show the stored value.
             error_log('view-claim: clinic auto-reverify failed: ' . $e->getMessage());
         }
     }
@@ -107,16 +103,23 @@ if ($latestQuote && $clinicVerified === false && $latestCompleted) {
 
 function claimStatusBadge(string $status): string {
     $map = [
-        'draft'    => 'bg-secondary',
-        'scanning' => 'bg-info text-dark',
-        'scanned'  => 'bg-primary',
-        'quoted'   => 'bg-warning text-dark',
-        'verified' => 'bg-success',
-        'approved' => 'bg-success',
-        'rejected' => 'bg-danger',
+        'draft'     => 'bg-secondary',
+        'scanning'  => 'bg-info text-dark',
+        'scanned'   => 'bg-primary',
+        'quoted'    => 'bg-warning text-dark',
+        'verified'  => 'bg-success',
+        'approved'  => 'bg-success',
+        'rejected'  => 'bg-danger',
+        'flagged'   => 'bg-warning text-dark',
+        'suspended' => 'bg-dark',
     ];
     $cls = $map[$status] ?? 'bg-secondary';
-    return '<span class="badge ' . $cls . '">' . htmlspecialchars(ucfirst($status), ENT_QUOTES, 'UTF-8') . '</span>';
+    $icon = '';
+    if ($status === 'approved') $icon = '<i class="bi bi-check-circle-fill me-1"></i>';
+    if ($status === 'rejected') $icon = '<i class="bi bi-x-circle-fill me-1"></i>';
+    if ($status === 'flagged') $icon = '<i class="bi bi-flag-fill me-1"></i>';
+    if ($status === 'suspended') $icon = '<i class="bi bi-pause-circle-fill me-1"></i>';
+    return '<span class="badge ' . $cls . '">' . $icon . htmlspecialchars(ucfirst($status), ENT_QUOTES, 'UTF-8') . '</span>';
 }
 ?>
 <!DOCTYPE html>
@@ -147,6 +150,17 @@ function claimStatusBadge(string $status): string {
     <?php endif; ?>
     <?php if ($flashError): ?>
         <div class="alert alert-danger"><?= esc($flashError) ?></div>
+    <?php endif; ?>
+
+    <!-- Flagged/Suspended banner -->
+    <?php if (in_array($claim['status'], ['flagged', 'suspended'])): ?>
+        <div class="alert <?= $claim['status'] === 'flagged' ? 'alert-warning' : 'alert-dark text-white' ?> mb-4">
+            <i class="bi bi-<?= $claim['status'] === 'flagged' ? 'flag-fill' : 'pause-circle-fill' ?> me-2"></i>
+            <strong>This claim has been <?= esc($claim['status']) ?> by an administrator.</strong>
+            <?php if (!empty($claim['admin_notes'])): ?>
+                <br><span class="small">Reason: <?= esc($claim['admin_notes']) ?></span>
+            <?php endif; ?>
+        </div>
     <?php endif; ?>
 
     <!-- Header -->
@@ -214,18 +228,63 @@ function claimStatusBadge(string $status): string {
                 </div>
             </div>
 
-            <!-- Generate Quote (if scanned but no quote yet) -->
+            <!-- Generate Quote (if scanned and confidence met, no quote yet) -->
             <?php if (in_array($claim['status'], ['scanned', 'verified']) && empty($quotes)): ?>
             <div class="card border-0 shadow-sm mb-4 border-success">
                 <div class="card-body text-center">
-                    <p class="mb-2">Receipt scanned. Ready to generate a reimbursement quote.</p>
+                    <div class="alert alert-success small py-2 mb-3">
+                        <i class="bi bi-check-circle-fill me-1"></i>
+                        Receipt scanned with sufficient confidence. Ready to generate your quote.
+                    </div>
                     <form method="POST" action="<?= base_path() ?>/dashboard/claims/generate-quote.php">
                         <?= csrfField() ?>
                         <input type="hidden" name="claim_id" value="<?= (int)$claimId ?>">
                         <button class="btn btn-success">
-                            <i class="bi bi-calculator me-1"></i>Generate Quote
+                            <i class="bi bi-calculator me-1"></i>Generate Reimbursement Quote
                         </button>
                     </form>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Rejected due to low confidence — prompt resubmit -->
+            <?php if ($claim['status'] === 'rejected' && empty($quotes)): ?>
+            <?php
+                // Get the confidence from the latest scan to show user
+                $latestConfidence = null;
+                foreach ($documents as $d) {
+                    if ($d['scan_status'] === 'completed' && $d['ai_confidence'] !== null) {
+                        $latestConfidence = (float) $d['ai_confidence'];
+                        break;
+                    }
+                }
+            ?>
+            <div class="card border-0 shadow-sm mb-4 border-danger">
+                <div class="card-body">
+                    <div class="alert alert-danger small py-2 mb-3">
+                        <i class="bi bi-x-circle-fill me-1"></i>
+                        <strong>Receipt scan did not meet the confidence threshold.</strong>
+                        <?php if ($latestConfidence !== null): ?>
+                            AI confidence was <?= round($latestConfidence * 100, 1) ?>%
+                            (minimum required: <?= round(AUTO_APPROVE_CONFIDENCE_THRESHOLD * 100) ?>%).
+                        <?php endif; ?>
+                    </div>
+                    <p class="small text-muted mb-2">
+                        This usually means the receipt image was blurry, too dark, or partially cut off. Please upload a clearer version.
+                    </p>
+                    <div class="card bg-light border-0 p-3 mb-3">
+                        <h6 class="small fw-bold mb-2"><i class="bi bi-lightbulb me-1"></i>Tips for a better scan:</h6>
+                        <ul class="small mb-0 ps-3">
+                            <li>Use good lighting — avoid shadows on the receipt</li>
+                            <li>Make sure the entire receipt is visible and not cut off</li>
+                            <li>Keep the camera steady to avoid blur</li>
+                            <li>If you have a PDF version from the vet, upload that instead</li>
+                        </ul>
+                    </div>
+                    <a href="<?= base_path() ?>/dashboard/claims/new-claim.php?continue=<?= (int)$claimId ?>"
+                       class="btn btn-warning w-100">
+                        <i class="bi bi-arrow-repeat me-1"></i>Resubmit with Better Receipt
+                    </a>
                 </div>
             </div>
             <?php endif; ?>
@@ -273,9 +332,15 @@ function claimStatusBadge(string $status): string {
                                             </span>
                                         </td>
                                         <td>
-                                            <?= $doc['ai_confidence'] !== null
-                                                ? number_format((float)$doc['ai_confidence'] * 100, 1) . '%'
-                                                : '—' ?>
+                                            <?php if ($doc['ai_confidence'] !== null):
+                                                $pct = round((float)$doc['ai_confidence'] * 100, 1);
+                                                $threshold = AUTO_APPROVE_CONFIDENCE_THRESHOLD * 100;
+                                                $cls = $pct >= $threshold ? 'text-success' : ($pct >= 50 ? 'text-warning' : 'text-danger');
+                                            ?>
+                                                <span class="fw-bold <?= $cls ?>"><?= $pct ?>%</span>
+                                            <?php else: ?>
+                                                —
+                                            <?php endif; ?>
                                         </td>
                                         <td class="small text-muted"><?= esc(date('d M Y H:i', strtotime($doc['uploaded_at']))) ?></td>
                                     </tr>
@@ -333,7 +398,7 @@ function claimStatusBadge(string $status): string {
             <!-- Quotes -->
             <?php if (!empty($quotes)): ?>
             <?php foreach ($quotes as $q): ?>
-            <div class="card border-0 shadow-sm mb-4 <?= $q['clinic_verified'] ? 'border-success' : '' ?>">
+            <div class="card border-0 shadow-sm mb-4 <?= $q['status'] === 'approved' ? 'border-success' : ($q['status'] === 'rejected' ? 'border-danger' : '') ?>">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h6 class="mb-0">
                         <i class="bi bi-receipt me-2"></i>Quote <?= esc($q['reference_id']) ?>
@@ -344,12 +409,30 @@ function claimStatusBadge(string $status): string {
                         <?php else: ?>
                             <span class="badge bg-warning text-dark">Clinic Not Verified</span>
                         <?php endif; ?>
-                        <span class="badge <?= $q['status'] === 'approved' ? 'bg-success' : ($q['status'] === 'rejected' ? 'bg-danger' : 'bg-secondary') ?>">
+                        <?php
+                        $qStatusMap = [
+                            'approved'  => 'bg-success',
+                            'rejected'  => 'bg-danger',
+                            'flagged'   => 'bg-warning text-dark',
+                            'suspended' => 'bg-dark',
+                        ];
+                        $qBadgeCls = $qStatusMap[$q['status']] ?? 'bg-secondary';
+                        ?>
+                        <span class="badge <?= $qBadgeCls ?>">
                             <?= esc(ucfirst(str_replace('_', ' ', $q['status']))) ?>
                         </span>
                     </div>
                 </div>
                 <div class="card-body">
+                    <!-- Auto-decision explanation -->
+                    <?php if (in_array($q['status'], ['approved', 'rejected'])): ?>
+                    <div class="alert <?= $q['status'] === 'approved' ? 'alert-success' : 'alert-danger' ?> small py-2 mb-3">
+                        <i class="bi bi-<?= $q['status'] === 'approved' ? 'check-circle' : 'x-circle' ?> me-1"></i>
+                        This quote was <strong>auto-<?= esc($q['status']) ?></strong> based on AI scan confidence
+                        (threshold: <?= round(AUTO_APPROVE_CONFIDENCE_THRESHOLD * 100) ?>%).
+                    </div>
+                    <?php endif; ?>
+
                     <div class="row g-3">
                         <div class="col-md-6">
                             <dl class="row small mb-0">

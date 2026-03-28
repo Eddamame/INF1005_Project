@@ -2,6 +2,7 @@
 /**
  * dashboard/claims/generate-quote.php
  * Generates a reimbursement quote from the AI scan data using QuoteEngine.
+ * Auto-approves or auto-rejects based on AI confidence threshold.
  */
 require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../config/session.php';
@@ -43,7 +44,7 @@ if (!$claim) {
     exit;
 }
 
-// Generate quote using QuoteEngine
+// Generate quote using QuoteEngine (includes auto-approve/reject logic)
 $engine = new QuoteEngine($db);
 $result = $engine->generateForClaim($claimId);
 
@@ -61,8 +62,6 @@ if ($result['success']) {
     $docRow = $docStmt->fetch();
     $parsedData = $docRow ? (json_decode($docRow['ai_parsed_data'], true) ?: []) : [];
 
-    // Robustness: if AI parsed payload is missing clinic_code, fall back to
-    // the value we already stored on the claim during scan-receipt.php.
     if (!isset($parsedData['clinic_code']) || trim((string) ($parsedData['clinic_code'] ?? '')) === '') {
         if (!empty($claim['clinic_code'])) {
             $parsedData['clinic_code'] = $claim['clinic_code'];
@@ -72,10 +71,15 @@ if ($result['success']) {
     $verification = $verifier->verifyForQuote($result['quote_id'], $parsedData);
     $isVerified = (bool) ($verification['verified'] ?? false);
 
-    // Do NOT adjust claims.status here; admin remains responsible for lifecycle changes.
-    // We only display verification result in the UI via quotes.clinic_verified.
-    $_SESSION['flash_message'] = 'Quote generated successfully! Reference: ' . $result['reference_id']
-        . ' — Clinic ' . ($isVerified ? 'Verified' : 'Not Verified') . '.';
+    // Build flash message with auto-decision info
+    $confidencePct = round(($result['confidence'] ?? 0) * 100, 1);
+    $decision = $result['auto_approved'] ? 'Auto-Approved' : 'Auto-Rejected';
+    $decisionIcon = $result['auto_approved'] ? '✅' : '❌';
+
+    $_SESSION['flash_message'] = "{$decisionIcon} Quote generated — {$decision}! "
+        . "Reference: {$result['reference_id']} "
+        . "| AI Confidence: {$confidencePct}% "
+        . "| Clinic " . ($isVerified ? 'Verified' : 'Not Verified') . ".";
 } else {
     $_SESSION['flash_error'] = $result['error'] ?? 'Could not generate quote.';
 }

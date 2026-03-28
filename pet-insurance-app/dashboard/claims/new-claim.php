@@ -2,6 +2,8 @@
 /**
  * dashboard/claims/new-claim.php
  * Create a new claim, then upload a receipt for AI scanning.
+ * Updated: confidence check at scan stage — rejects low-confidence scans
+ * and asks user to resubmit instead of letting them generate a quote.
  */
 require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../config/session.php';
@@ -20,7 +22,7 @@ $errors  = [];
 $success = '';
 $claimId = null;
 
-// Check if continuing a draft claim
+// Check if continuing a draft or rejected claim
 $continueDraft = inputInt('continue', 'GET');
 if ($continueDraft) {
     $stmt = $db->prepare('
@@ -29,14 +31,23 @@ if ($continueDraft) {
         JOIN pets p ON p.id = c.pet_id
         JOIN subscriptions s ON s.id = c.subscription_id
         JOIN insurance_plans ip ON ip.id = s.plan_id
-        WHERE c.id = :id AND c.user_id = :uid AND c.status = :status
+        WHERE c.id = :id AND c.user_id = :uid AND c.status IN (:s1, :s2)
         LIMIT 1
     ');
-    $stmt->execute([':id' => $continueDraft, ':uid' => $userId, ':status' => 'draft']);
+    $stmt->execute([
+        ':id' => $continueDraft,
+        ':uid' => $userId,
+        ':s1' => 'draft',
+        ':s2' => 'rejected',
+    ]);
     $draftClaim = $stmt->fetch();
     if ($draftClaim) {
         $claimId = (int) $draftClaim['id'];
-        $success = 'Continuing draft claim ' . esc($draftClaim['reference_id']) . '. Upload your receipt below.';
+        if ($draftClaim['status'] === 'rejected') {
+            $success = 'Resubmitting claim ' . esc($draftClaim['reference_id']) . '. Upload a clearer receipt below.';
+        } else {
+            $success = 'Continuing draft claim ' . esc($draftClaim['reference_id']) . '. Upload your receipt below.';
+        }
     }
 }
 
@@ -108,6 +119,8 @@ if (!$claimId && $_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+$confidenceThresholdPct = round((defined('AUTO_APPROVE_CONFIDENCE_THRESHOLD') ? AUTO_APPROVE_CONFIDENCE_THRESHOLD : 0.80) * 100);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -223,6 +236,7 @@ if (!$claimId && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php if ($claimId): ?>
                         <p class="text-muted small">
                             Upload a photo or PDF of your vet receipt. Our AI will scan it and extract the details automatically.
+                            A confidence score of at least <?= $confidenceThresholdPct ?>% is required to proceed.
                         </p>
                         <div class="upload-dropzone claim-upload-dropzone"
                              id="receipt-dropzone"
@@ -268,8 +282,48 @@ if (!$claimId && $_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="mt-3 d-flex gap-2">
+                        <!-- Confidence MET: show generate quote button -->
+                        <div class="mt-3" id="generate-quote-section" hidden>
+                            <div class="alert alert-success small py-2 mb-2" id="confidence-met-msg">
+                                <i class="bi bi-check-circle-fill me-1"></i>
+                                <strong>Scan passed!</strong> AI confidence meets the <?= $confidenceThresholdPct ?>% threshold. You can now generate your reimbursement quote.
+                            </div>
+                            <form method="POST" action="<?= base_path() ?>/dashboard/claims/generate-quote.php">
+                                <?= csrfField() ?>
+                                <input type="hidden" name="claim_id" value="<?= (int)$claimId ?>">
+                                <button class="btn btn-success w-100">
+                                    <i class="bi bi-calculator me-1"></i>Generate Reimbursement Quote
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Confidence NOT MET: show rejection + resubmit -->
+                        <div class="mt-3" id="resubmit-section" hidden>
+                            <div class="alert alert-danger small py-2 mb-2">
+                                <i class="bi bi-x-circle-fill me-1"></i>
+                                <strong>Scan did not meet the confidence threshold.</strong>
+                                The AI confidence score (<span id="resubmit-confidence">—</span>%) is below the required <?= $confidenceThresholdPct ?>%.
+                                This usually means the receipt image is blurry, too dark, or partially cut off.
+                            </div>
+                            <div class="card bg-light border-0 p-3 mb-2">
+                                <h6 class="small fw-bold mb-2"><i class="bi bi-lightbulb me-1"></i>Tips for a better scan:</h6>
+                                <ul class="small mb-0 ps-3">
+                                    <li>Use good lighting — avoid shadows on the receipt</li>
+                                    <li>Make sure the entire receipt is visible and not cut off</li>
+                                    <li>Keep the camera steady to avoid blur</li>
+                                    <li>If you have a PDF version from the vet, upload that instead</li>
+                                </ul>
+                            </div>
+                            <button type="button" class="btn btn-warning w-100" id="resubmit-btn">
+                                <i class="bi bi-arrow-repeat me-1"></i>Upload a Better Receipt
+                            </button>
+                        </div>
+
+                        <!-- Navigation links (shown after successful scan) -->
+                        <div class="mt-3" id="nav-links-section" hidden>
+                            <div class="d-flex gap-2">
                                 <a href="<?= base_path() ?>/dashboard/claims/view-claim.php?id=<?= (int)$claimId ?>"
                                    class="btn btn-primary btn-sm">
                                     <i class="bi bi-eye me-1"></i>View Full Claim
@@ -281,16 +335,6 @@ if (!$claimId && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         </div>
 
-                        <!-- Generate Quote button (shown after successful scan) -->
-                        <div class="mt-3" id="generate-quote-section" hidden>
-                            <form method="POST" action="<?= base_path() ?>/dashboard/claims/generate-quote.php">
-                                <?= csrfField() ?>
-                                <input type="hidden" name="claim_id" value="<?= (int)$claimId ?>">
-                                <button class="btn btn-success w-100">
-                                    <i class="bi bi-calculator me-1"></i>Generate Reimbursement Quote
-                                </button>
-                            </form>
-                        </div>
                     <?php else: ?>
                         <div class="text-center py-4 claim-upload-empty">
                             <i class="bi bi-arrow-left-circle" style="font-size: 2rem; color: var(--ps-gray-400);"></i>
@@ -314,6 +358,38 @@ document.addEventListener('DOMContentLoaded', function () {
     var zone = document.getElementById('receipt-dropzone');
     if (!zone) return;
 
+    var resubmitBtn = document.getElementById('resubmit-btn');
+
+    // "Upload a Better Receipt" resets the UI and lets user try again
+    if (resubmitBtn) {
+        resubmitBtn.addEventListener('click', function () {
+            // Hide result sections
+            var preview = document.getElementById('scan-preview');
+            var quoteSection = document.getElementById('generate-quote-section');
+            var resubmitSection = document.getElementById('resubmit-section');
+            var navLinks = document.getElementById('nav-links-section');
+
+            if (preview) preview.hidden = true;
+            if (quoteSection) quoteSection.hidden = true;
+            if (resubmitSection) resubmitSection.hidden = true;
+            if (navLinks) navLinks.hidden = true;
+
+            // Reset upload status text
+            var statusEl = zone.querySelector('[data-upload-status]');
+            if (statusEl) {
+                statusEl.textContent = '';
+                statusEl.classList.remove('text-danger', 'text-success');
+            }
+
+            // Trigger file dialog
+            var fileInput = zone.querySelector('input[type="file"]');
+            if (fileInput) {
+                fileInput.value = '';
+                fileInput.click();
+            }
+        });
+    }
+
     zone.addEventListener('receipt:upload:success', function (event) {
         var data = event.detail || {};
         var scan = data.scan || {};
@@ -322,11 +398,24 @@ document.addEventListener('DOMContentLoaded', function () {
         var preview = document.getElementById('scan-preview');
         if (!preview) return;
 
+        // Populate scan results
         document.getElementById('scan-clinic-name').textContent = parsed.clinic_name || '—';
         document.getElementById('scan-clinic-code').textContent = parsed.clinic_code || '—';
         document.getElementById('scan-visit-date').textContent = parsed.visit_date || '—';
         document.getElementById('scan-total').textContent = parsed.total != null ? '$' + parseFloat(parsed.total).toFixed(2) : '—';
-        document.getElementById('scan-confidence').textContent = scan.confidence != null ? (scan.confidence * 100).toFixed(1) + '%' : '—';
+
+        var confidencePct = scan.confidence != null ? (scan.confidence * 100).toFixed(1) : '—';
+        var confidenceEl = document.getElementById('scan-confidence');
+        confidenceEl.textContent = confidencePct + '%';
+
+        // Color-code confidence
+        if (scan.confidence_met) {
+            confidenceEl.className = 'text-success fw-bold';
+        } else if (scan.confidence >= 0.5) {
+            confidenceEl.className = 'text-warning fw-bold';
+        } else {
+            confidenceEl.className = 'text-danger fw-bold';
+        }
 
         // Line items
         var items = parsed.line_items || [];
@@ -346,10 +435,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
         preview.hidden = false;
 
-        // Show generate quote button if scan was successful
-        if (scan.success) {
-            var quoteSection = document.getElementById('generate-quote-section');
+        // Branch based on confidence_met flag from the API
+        var quoteSection = document.getElementById('generate-quote-section');
+        var resubmitSection = document.getElementById('resubmit-section');
+        var navLinks = document.getElementById('nav-links-section');
+
+        if (scan.confidence_met) {
+            // Confidence OK — show Generate Quote
             if (quoteSection) quoteSection.hidden = false;
+            if (resubmitSection) resubmitSection.hidden = true;
+            if (navLinks) navLinks.hidden = false;
+        } else {
+            // Confidence too low — show resubmit prompt
+            if (quoteSection) quoteSection.hidden = true;
+            if (resubmitSection) {
+                resubmitSection.hidden = false;
+                var resubmitConfEl = document.getElementById('resubmit-confidence');
+                if (resubmitConfEl) resubmitConfEl.textContent = confidencePct;
+            }
+            if (navLinks) navLinks.hidden = false;
         }
     });
 });

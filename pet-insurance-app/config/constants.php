@@ -52,21 +52,19 @@ function base_path() {
 }
 
 // ── Database ─────────────────────────────────────────────────
-// TCP connection in both environments — identical behaviour.
 define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
 define('DB_NAME', getenv('DB_NAME') ?: 'pet_insurance');
 define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') ?: '');
 
 // ── File Uploads ────────────────────────────────────────────
-// Local filesystem in both environments (VM has persistent disk).
 define('UPLOAD_DIR', __DIR__ . '/../uploads/');
 define('MAX_FILE_SIZE', 10 * 1024 * 1024); // 10 MB
 define('ALLOWED_MIME_TYPES', [
     'image/jpeg',
     'image/png',
     'image/webp',
-    'image/tiff',        // Document AI supports TIFF natively
+    'image/tiff',
     'application/pdf',
 ]);
 
@@ -74,26 +72,22 @@ define('ALLOWED_MIME_TYPES', [
 define('GCP_PROJECT_ID', getenv('GCP_PROJECT_ID') ?: 'your-gcp-project-id');
 define('GCP_LOCATION',   getenv('GCP_LOCATION')   ?: 'us');
 
-// Credentials: on VM stored outside webroot; locally in config/
 define('GCP_CREDENTIALS_PATH', IS_PRODUCTION
     ? '/var/www/gcp-credentials.json'
     : __DIR__ . '/gcp-credentials.json'
 );
 
-// Processor IDs — copy from GCP Console → Document AI → My Processors
 define('GCP_RECEIPT_PROCESSOR_ID', getenv('GCP_RECEIPT_PROCESSOR_ID') ?: 'PLACEHOLDER_RECEIPT');
 define('GCP_INVOICE_PROCESSOR_ID', getenv('GCP_INVOICE_PROCESSOR_ID') ?: 'PLACEHOLDER_INVOICE');
 define('GCP_EXPENSE_PROCESSOR_ID', getenv('GCP_EXPENSE_PROCESSOR_ID') ?: 'PLACEHOLDER_EXPENSE');
 
-// Map file_type → processor ID
 define('GCP_PROCESSOR_MAP', [
     'receipt'    => GCP_RECEIPT_PROCESSOR_ID,
     'invoice'    => GCP_INVOICE_PROCESSOR_ID,
     'vet_report' => GCP_EXPENSE_PROCESSOR_ID,
-    'other'      => GCP_RECEIPT_PROCESSOR_ID,   // Fallback
+    'other'      => GCP_RECEIPT_PROCESSOR_ID,
 ]);
 
-// Map file_type → human-readable processor name (stored in DB for auditing)
 define('GCP_PROCESSOR_NAMES', [
     'receipt'    => 'RECEIPT_PARSER',
     'invoice'    => 'INVOICE_PARSER',
@@ -109,8 +103,15 @@ define('RECAPTCHA_SECRET_KEY', getenv('RECAPTCHA_SECRET_KEY') ?: '');
 define('VERIFICATION_MASTER_CODE', '000000');
 define('VERIFICATION_CODE_EXPIRY', 15); // minutes
 
-
 // ── AI Scanner Mode ─────────────────────────────────────────
 // 'mock'  = AIScannerMock (local dev, Phases 0-3, no GCP needed)
 // 'live'  = AIScanner (real Document AI, Phase 4+)
 define('AI_SCANNER_MODE', getenv('AI_SCANNER_MODE') ?: 'mock');
+
+// ── Auto-Approval Confidence Threshold ──────────────────────
+// Claims with AI scan confidence >= this value are auto-approved.
+// Claims below this threshold are auto-rejected.
+// Recommended: 0.80 (80%) — balances automation with accuracy.
+// At 80%, the AI is confident enough that the extracted data
+// (totals, line items, clinic info) is reliable for payout.
+define('AUTO_APPROVE_CONFIDENCE_THRESHOLD', 0.80);

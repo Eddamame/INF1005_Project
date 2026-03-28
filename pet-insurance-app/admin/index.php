@@ -1,8 +1,8 @@
 <?php
 /**
  * admin/index.php
- * Phase 3: Admin dashboard with summary stats.
- * - Recent Claims table now shows which user submitted each claim.
+ * Admin dashboard with summary stats.
+ * Updated: links to combined claims-review page instead of separate claims/quotes.
  */
 require_once __DIR__ . '/../config/constants.php';
 require_once __DIR__ . '/../config/session.php';
@@ -19,16 +19,21 @@ requireAdmin();
 $totalCustomers = (int) $db->query("SELECT COUNT(*) FROM users WHERE role = 'customer'")->fetchColumn();
 $totalPets    = (int) $db->query("SELECT COUNT(*) FROM pets")->fetchColumn();
 $totalClaims  = (int) $db->query("SELECT COUNT(*) FROM claims")->fetchColumn();
-$pendingClaims = (int) $db->query("SELECT COUNT(*) FROM claims WHERE status NOT IN ('approved','rejected')")->fetchColumn();
+$autoApproved = (int) $db->query("SELECT COUNT(*) FROM claims WHERE status = 'approved'")->fetchColumn();
+$autoRejected = (int) $db->query("SELECT COUNT(*) FROM claims WHERE status = 'rejected'")->fetchColumn();
+$flaggedClaims = (int) $db->query("SELECT COUNT(*) FROM claims WHERE status IN ('flagged','suspended')")->fetchColumn();
 $totalQuotes  = (int) $db->query("SELECT COUNT(*) FROM quotes")->fetchColumn();
 $totalClinics = (int) $db->query("SELECT COUNT(*) FROM vet_clinics")->fetchColumn();
 $totalAudit   = (int) $db->query("SELECT COUNT(*) FROM audit_log")->fetchColumn();
 
-// Recent claims — includes user info
+// Recent claims — includes user info and confidence
 $recentClaims = $db->query("
     SELECT c.reference_id, c.status, c.created_at,
            u.first_name, u.last_name, u.email,
-           p.name AS pet_name
+           p.name AS pet_name,
+           (SELECT cd.ai_confidence FROM claim_documents cd
+            WHERE cd.claim_id = c.id AND cd.scan_status = 'completed'
+            ORDER BY cd.uploaded_at DESC LIMIT 1) AS ai_confidence
     FROM claims c
     JOIN users u ON u.id = c.user_id
     JOIN pets p ON p.id = c.pet_id
@@ -48,13 +53,15 @@ $recentLogs = $db->query("
 
 function dashBadge(string $status): string {
     $map = [
-        'draft'    => 'bg-secondary',
-        'scanning' => 'bg-info text-dark',
-        'scanned'  => 'bg-primary',
-        'quoted'   => 'bg-warning text-dark',
-        'verified' => 'bg-success',
-        'approved' => 'bg-success',
-        'rejected' => 'bg-danger',
+        'draft'     => 'bg-secondary',
+        'scanning'  => 'bg-info text-dark',
+        'scanned'   => 'bg-primary',
+        'quoted'    => 'bg-warning text-dark',
+        'verified'  => 'bg-success',
+        'approved'  => 'bg-success',
+        'rejected'  => 'bg-danger',
+        'flagged'   => 'bg-warning text-dark',
+        'suspended' => 'bg-dark',
     ];
     $cls = $map[$status] ?? 'bg-secondary';
     return '<span class="badge ' . $cls . '">' . htmlspecialchars(ucfirst($status), ENT_QUOTES, 'UTF-8') . '</span>';
@@ -105,11 +112,25 @@ function dashBadge(string $status): string {
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="rounded-circle bg-success bg-opacity-10 p-3">
-                        <i class="bi bi-heart-pulse-fill text-success fs-4"></i>
+                        <i class="bi bi-check-circle-fill text-success fs-4"></i>
                     </div>
                     <div>
-                        <div class="fw-bold fs-4"><?= number_format($totalPets) ?></div>
-                        <div class="text-muted small">Pets Registered</div>
+                        <div class="fw-bold fs-4"><?= number_format($autoApproved) ?></div>
+                        <div class="text-muted small">Auto-Approved</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                        <i class="bi bi-x-circle-fill text-danger fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-4"><?= number_format($autoRejected) ?></div>
+                        <div class="text-muted small">Auto-Rejected</div>
                     </div>
                 </div>
             </div>
@@ -119,7 +140,21 @@ function dashBadge(string $status): string {
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="rounded-circle bg-warning bg-opacity-10 p-3">
-                        <i class="bi bi-file-earmark-check-fill text-warning fs-4"></i>
+                        <i class="bi bi-flag-fill text-warning fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-4"><?= number_format($flaggedClaims) ?></div>
+                        <div class="text-muted small">Flagged / Suspended</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                        <i class="bi bi-file-earmark-check-fill text-info fs-4"></i>
                     </div>
                     <div>
                         <div class="fw-bold fs-4"><?= number_format($totalClaims) ?></div>
@@ -130,34 +165,6 @@ function dashBadge(string $status): string {
         </div>
 
         <div class="col-sm-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="rounded-circle bg-danger bg-opacity-10 p-3">
-                        <i class="bi bi-exclamation-triangle-fill text-danger fs-4"></i>
-                    </div>
-                    <div>
-                        <div class="fw-bold fs-4"><?= number_format($pendingClaims) ?></div>
-                        <div class="text-muted small">Pending Claims</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-sm-6 col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="rounded-circle bg-info bg-opacity-10 p-3">
-                        <i class="bi bi-receipt text-info fs-4"></i>
-                    </div>
-                    <div>
-                        <div class="fw-bold fs-4"><?= number_format($totalQuotes) ?></div>
-                        <div class="text-muted small">Quotes Generated</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-sm-6 col-lg-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="rounded-circle bg-secondary bg-opacity-10 p-3">
@@ -171,7 +178,21 @@ function dashBadge(string $status): string {
             </div>
         </div>
 
-        <div class="col-sm-6 col-lg-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                        <i class="bi bi-heart-pulse-fill text-success fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-4"><?= number_format($totalPets) ?></div>
+                        <div class="text-muted small">Pets Registered</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="rounded-circle bg-dark bg-opacity-10 p-3">
@@ -191,14 +212,13 @@ function dashBadge(string $status): string {
     <div class="row g-3 mb-5">
         <?php
         $links = [
-            ['href' => base_path() . '/admin/users.php',       'icon' => 'bi-people',             'label' => 'Manage Users',       'color' => 'primary'],
-            ['href' => base_path() . '/admin/claims.php',      'icon' => 'bi-file-earmark-check', 'label' => 'Manage Claims',      'color' => 'warning'],
-            ['href' => base_path() . '/admin/quotes.php',      'icon' => 'bi-receipt',            'label' => 'Manage Quotes',      'color' => 'info'],
-            ['href' => base_path() . '/admin/vet-clinics.php', 'icon' => 'bi-hospital',           'label' => 'Vet Clinics',        'color' => 'success'],
-            ['href' => base_path() . '/admin/audit-log.php',   'icon' => 'bi-journal-text',       'label' => 'Audit Log',          'color' => 'secondary'],
+            ['href' => base_path() . '/admin/users.php',          'icon' => 'bi-people',             'label' => 'Manage Users',    'color' => 'primary'],
+            ['href' => base_path() . '/admin/claims-review.php',  'icon' => 'bi-clipboard2-check',   'label' => 'Claims Review',   'color' => 'warning'],
+            ['href' => base_path() . '/admin/vet-clinics.php',    'icon' => 'bi-hospital',           'label' => 'Vet Clinics',     'color' => 'success'],
+            ['href' => base_path() . '/admin/audit-log.php',      'icon' => 'bi-journal-text',       'label' => 'Audit Log',       'color' => 'secondary'],
         ];
         foreach ($links as $link): ?>
-        <div class="col-6 col-md-4 col-lg">
+        <div class="col-6 col-md-3">
             <a href="<?= $link['href'] ?>"
                class="card border-0 shadow-sm text-decoration-none text-center h-100">
                 <div class="card-body py-4">
@@ -216,7 +236,7 @@ function dashBadge(string $status): string {
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Claims</h6>
-                    <a href="<?= base_path() ?>/admin/claims.php" class="btn btn-sm btn-outline-primary">View All</a>
+                    <a href="<?= base_path() ?>/admin/claims-review.php" class="btn btn-sm btn-outline-primary">View All</a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -226,13 +246,14 @@ function dashBadge(string $status): string {
                                     <th>Reference</th>
                                     <th>Submitted By</th>
                                     <th>Pet</th>
+                                    <th>Confidence</th>
                                     <th>Status</th>
                                     <th>Date</th>
                                 </tr>
                             </thead>
                             <tbody>
                             <?php if (empty($recentClaims)): ?>
-                                <tr><td colspan="5" class="text-center text-muted py-3">No claims yet.</td></tr>
+                                <tr><td colspan="6" class="text-center text-muted py-3">No claims yet.</td></tr>
                             <?php else: ?>
                                 <?php foreach ($recentClaims as $c): ?>
                                 <tr>
@@ -242,6 +263,17 @@ function dashBadge(string $status): string {
                                         <br><small class="text-muted"><?= esc($c['email']) ?></small>
                                     </td>
                                     <td><?= esc($c['pet_name']) ?></td>
+                                    <td>
+                                        <?php if ($c['ai_confidence'] !== null): ?>
+                                            <?php
+                                            $pct = round((float)$c['ai_confidence'] * 100, 1);
+                                            $cls = $pct >= 80 ? 'bg-success' : ($pct >= 50 ? 'bg-warning text-dark' : 'bg-danger');
+                                            ?>
+                                            <span class="badge <?= $cls ?>"><?= $pct ?>%</span>
+                                        <?php else: ?>
+                                            <span class="text-muted">—</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td><?= dashBadge($c['status']) ?></td>
                                     <td class="text-muted small"><?= esc(date('d M Y', strtotime($c['created_at']))) ?></td>
                                 </tr>

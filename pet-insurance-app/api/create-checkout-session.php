@@ -5,7 +5,7 @@
  * Expects POST with:
  *   - pet_id
  *   - plan_id
- *   - duration (1, 6, or 12)
+ *   - duration (6, 12, or 18)
  *   - csrf_token (body or X-CSRF-Token header)
  *
  * No subscription record is created here.
@@ -132,13 +132,13 @@ try {
         $upd->execute([':cid' => $stripeCustomerId, ':id' => $userId]);
     }
 
-    // Get duration from form (default 12 months)
+    // Get duration from form (default 12 months) — valid options: 6, 12, 18
     $duration = isset($_POST['duration']) ? (int)$_POST['duration'] : 12;
-    if (!in_array($duration, [1, 6, 12], true)) {
+    if (!in_array($duration, [6, 12, 18], true)) {
         $duration = 12;
     }
 
-    $discounts = [1 => 0, 6 => 0.05, 12 => 0.10];
+    $discounts = [6 => 0, 12 => 0.05, 18 => 0.10];
     $discount = $discounts[$duration] ?? 0;
     $discountedMonthly = ((float) $plan['monthly_premium']) * (1 - $discount);
     $totalAmount = $discountedMonthly * $duration;
@@ -153,7 +153,7 @@ try {
     $successUrlFull = $proto . '://' . $host . $baseUrl . 'checkout-success.php?session_id={CHECKOUT_SESSION_ID}';
     $cancelUrlFull  = $proto . '://' . $host . $baseUrl . 'checkout-cancelled.php';
 
-    $durationLabel = $duration . ($duration === 1 ? ' month' : ' months');
+    $durationLabel = $duration . ' months';
     $discountText = $discount > 0 ? ' (' . ($discount * 100) . '% off)' : '';
 
     // Stripe checkout charges ONLY 1 month (first month payment).

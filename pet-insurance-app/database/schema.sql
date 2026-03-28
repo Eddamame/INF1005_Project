@@ -225,3 +225,25 @@ CREATE TABLE IF NOT EXISTS payment_methods (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_pm_user (user_id)
 ) ENGINE=InnoDB;
+
+-- Add 'flagged' and 'suspended' to claims status enum
+ALTER TABLE claims
+    MODIFY COLUMN status ENUM(
+        'draft', 'scanning', 'scanned', 'quoted', 'verified',
+        'approved', 'rejected', 'flagged', 'suspended'
+    ) NOT NULL DEFAULT 'draft';
+ 
+-- Add admin_notes column to claims for flag/suspend reasons
+ALTER TABLE claims
+    ADD COLUMN admin_notes TEXT DEFAULT NULL AFTER status;
+ 
+-- Add 'flagged' and 'suspended' to quotes status enum
+ALTER TABLE quotes
+    MODIFY COLUMN status ENUM(
+        'draft', 'pending_review', 'approved', 'rejected', 'paid',
+        'flagged', 'suspended'
+    ) NOT NULL DEFAULT 'draft';
+ 
+-- Add admin_notes column to quotes for flag/suspend reasons
+ALTER TABLE quotes
+    ADD COLUMN admin_notes TEXT DEFAULT NULL AFTER status;

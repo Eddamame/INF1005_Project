@@ -2,6 +2,7 @@
 /**
  * dashboard/claims/index.php
  * User's claims dashboard — list all claims with status and links.
+ * Updated: rejected claims show "Resubmit" button for re-uploading receipt.
  */
 require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../config/session.php';
@@ -22,10 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     requireValidCsrf();
     $deleteId = inputInt('claim_id');
     if ($deleteId) {
-        $stmt = $db->prepare('DELETE FROM claims WHERE id = :id AND user_id = :uid AND status = :status');
-        $stmt->execute([':id' => $deleteId, ':uid' => $userId, ':status' => 'draft']);
+        $stmt = $db->prepare('DELETE FROM claims WHERE id = :id AND user_id = :uid AND status IN (:s1, :s2)');
+        $stmt->execute([':id' => $deleteId, ':uid' => $userId, ':s1' => 'draft', ':s2' => 'rejected']);
         if ($stmt->rowCount() > 0) {
-            $success = 'Draft claim deleted.';
+            $success = 'Claim deleted.';
         }
     }
 }
@@ -35,7 +36,10 @@ $stmt = $db->prepare('
     SELECT c.*, p.name AS pet_name, p.species,
            ip.name AS plan_name,
            (SELECT COUNT(*) FROM claim_documents cd WHERE cd.claim_id = c.id) AS doc_count,
-           (SELECT COUNT(*) FROM quotes q WHERE q.claim_id = c.id) AS quote_count
+           (SELECT COUNT(*) FROM quotes q WHERE q.claim_id = c.id) AS quote_count,
+           (SELECT cd2.ai_confidence FROM claim_documents cd2
+            WHERE cd2.claim_id = c.id AND cd2.scan_status = \'completed\'
+            ORDER BY cd2.uploaded_at DESC LIMIT 1) AS latest_confidence
     FROM claims c
     JOIN pets p ON p.id = c.pet_id
     JOIN subscriptions s ON s.id = c.subscription_id
@@ -48,18 +52,21 @@ $claims = $stmt->fetchAll();
 
 function claimStatusBadge(string $status): string {
     $map = [
-        'draft'    => 'bg-secondary',
-        'scanning' => 'bg-info text-dark',
-        'scanned'  => 'bg-primary',
-        'quoted'   => 'bg-warning text-dark',
-        'verified' => 'bg-success',
-        'approved' => 'bg-success',
-        'rejected' => 'bg-danger',
+        'draft'     => 'bg-secondary',
+        'scanning'  => 'bg-info text-dark',
+        'scanned'   => 'bg-primary',
+        'quoted'    => 'bg-warning text-dark',
+        'verified'  => 'bg-success',
+        'approved'  => 'bg-success',
+        'rejected'  => 'bg-danger',
+        'flagged'   => 'bg-warning text-dark',
+        'suspended' => 'bg-dark',
     ];
     $cls = $map[$status] ?? 'bg-secondary';
     return '<span class="badge ' . $cls . '">' . htmlspecialchars(ucfirst($status), ENT_QUOTES, 'UTF-8') . '</span>';
 }
 
+$thresholdPct = round((defined('AUTO_APPROVE_CONFIDENCE_THRESHOLD') ? AUTO_APPROVE_CONFIDENCE_THRESHOLD : 0.80) * 100);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -109,6 +116,13 @@ function claimStatusBadge(string $status): string {
                         <div class="d-flex align-items-center gap-2 mb-1">
                             <code class="fw-bold"><?= esc($c['reference_id']) ?></code>
                             <?= claimStatusBadge($c['status']) ?>
+                            <?php if ($c['latest_confidence'] !== null): ?>
+                                <?php
+                                $pct = round((float)$c['latest_confidence'] * 100, 1);
+                                $confCls = $pct >= $thresholdPct ? 'bg-success' : ($pct >= 50 ? 'bg-warning text-dark' : 'bg-danger');
+                                ?>
+                                <span class="badge <?= $confCls ?> small"><?= $pct ?>% confidence</span>
+                            <?php endif; ?>
                         </div>
                         <p class="mb-1">
                             <strong><?= esc($c['pet_name']) ?></strong>
@@ -135,8 +149,19 @@ function claimStatusBadge(string $status): string {
                                class="btn btn-sm btn-success">
                                 Continue <i class="bi bi-arrow-right ms-1"></i>
                             </a>
+                        <?php endif; ?>
+
+                        <?php if ($c['status'] === 'rejected' && (int)$c['quote_count'] === 0): ?>
+                            <!-- Rejected due to low confidence — offer resubmit -->
+                            <a href="<?= base_path() ?>/dashboard/claims/new-claim.php?continue=<?= (int)$c['id'] ?>"
+                               class="btn btn-sm btn-warning">
+                                <i class="bi bi-arrow-repeat me-1"></i>Resubmit
+                            </a>
+                        <?php endif; ?>
+
+                        <?php if (in_array($c['status'], ['draft', 'rejected'])): ?>
                             <form method="POST" class="d-inline"
-                                  onsubmit="return confirm('Delete this draft claim?')">
+                                  onsubmit="return confirm('Delete this claim?')">
                                 <?php csrfField(); ?>
                                 <input type="hidden" name="action" value="delete_claim">
                                 <input type="hidden" name="claim_id" value="<?= (int)$c['id'] ?>">
@@ -145,6 +170,7 @@ function claimStatusBadge(string $status): string {
                                 </button>
                             </form>
                         <?php endif; ?>
+
                         <a href="<?= base_path() ?>/dashboard/claims/view-claim.php?id=<?= (int)$c['id'] ?>"
                            class="btn btn-sm btn-outline-primary">
                             View <i class="bi bi-arrow-right ms-1"></i>
