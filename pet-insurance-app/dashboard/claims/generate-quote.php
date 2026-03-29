@@ -71,10 +71,23 @@ if ($result['success']) {
     $verification = $verifier->verifyForQuote($result['quote_id'], $parsedData);
     $isVerified = (bool) ($verification['verified'] ?? false);
 
+    // If clinic is not verified, override auto-approval — requires admin review
+    if ($result['auto_approved'] && !$isVerified) {
+        $db->prepare('UPDATE quotes SET status = :s WHERE id = :id')
+           ->execute([':s' => 'pending_review', ':id' => $result['quote_id']]);
+        $db->prepare('UPDATE claims SET status = :s WHERE id = :id')
+           ->execute([':s' => 'quoted', ':id' => $claimId]);
+    }
+
     // Build flash message with auto-decision info
     $confidencePct = round(($result['confidence'] ?? 0) * 100, 1);
-    $decision = $result['auto_approved'] ? 'Auto-Approved' : 'Auto-Rejected';
-    $decisionIcon = $result['auto_approved'] ? '✅' : '❌';
+    if (!$isVerified && $result['auto_approved']) {
+        $decision = 'Pending Admin Review (Clinic Not Verified)';
+        $decisionIcon = '⏳';
+    } else {
+        $decision = $result['auto_approved'] ? 'Auto-Approved' : 'Auto-Rejected';
+        $decisionIcon = $result['auto_approved'] ? '✅' : '❌';
+    }
 
     $_SESSION['flash_message'] = "{$decisionIcon} Quote generated — {$decision}! "
         . "Reference: {$result['reference_id']} "

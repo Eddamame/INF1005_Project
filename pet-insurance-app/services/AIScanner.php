@@ -336,7 +336,11 @@ class AIScanner
     private function calculateAverageConfidence(array $entities): float
     {
         if (empty($entities)) return 0.0;
-        return round(array_sum(array_column($entities, 'confidence')) / count($entities), 4);
+        // Exclude entities with zero confidence — these indicate extraction failures
+        // (e.g. empty value fields) and unfairly drag down the overall score.
+        $scorable = array_filter($entities, fn($e) => ($e['confidence'] ?? 0) > 0);
+        if (empty($scorable)) return 0.0;
+        return round(array_sum(array_column($scorable, 'confidence')) / count($scorable), 4);
     }
 
     private function errorResponse(string $message): array

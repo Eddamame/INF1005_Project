@@ -22,6 +22,7 @@ INSERT INTO vet_clinics (clinic_code, name, address, phone, email) VALUES
 ('VET-WP-2025',  'Westpark Veterinary Hospital',   '222 Park Avenue West, Westdale, WD 66666',    '(555) 890-1234', 'reception@westparkvet.com'),
 ('VET-FC-2024',  'Furry Companions Vet',           '333 Companion Court, Friendlytown, FT 77777', '(555) 901-2345', 'hello@furrycompanions.vet'),
 ('VET-NL-2025',  'New Life Animal Clinic',          '444 Hope Street, Freshstart, FS 88888',       '(555) 012-3456', 'care@newlifeanimal.com'),
+('VET-SS-2024',  'Ohana VetCare', 'Loyang Point 258 Pasir Ris St 21 #04-01 S510258',       '6282 9070', 'ovc@singnet.com'),
 
 -- Clinics with different naming patterns (tests fuzzy matching)
 ('REG-VT-10042', 'Dr. Martinez Veterinary Office',  '555 Oak Street, Oldtown, OT 99999',          '(555) 111-2222', 'drm@martinezvet.com'),

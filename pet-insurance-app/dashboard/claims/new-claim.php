@@ -31,7 +31,7 @@ if ($continueDraft) {
         JOIN pets p ON p.id = c.pet_id
         JOIN subscriptions s ON s.id = c.subscription_id
         JOIN insurance_plans ip ON ip.id = s.plan_id
-        WHERE c.id = :id AND c.user_id = :uid AND c.status IN (:s1, :s2)
+        WHERE c.id = :id AND c.user_id = :uid AND c.status IN (:s1, :s2, :s3)
         LIMIT 1
     ');
     $stmt->execute([
@@ -39,6 +39,7 @@ if ($continueDraft) {
         ':uid' => $userId,
         ':s1' => 'draft',
         ':s2' => 'rejected',
+        ':s3' => 'scanning',
     ]);
     $draftClaim = $stmt->fetch();
     if ($draftClaim) {

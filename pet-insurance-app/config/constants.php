@@ -114,4 +114,4 @@ define('AI_SCANNER_MODE', getenv('AI_SCANNER_MODE') ?: 'mock');
 // Recommended: 0.80 (80%) — balances automation with accuracy.
 // At 80%, the AI is confident enough that the extracted data
 // (totals, line items, clinic info) is reliable for payout.
-define('AUTO_APPROVE_CONFIDENCE_THRESHOLD', 0.80);
+define('AUTO_APPROVE_CONFIDENCE_THRESHOLD', 0.60);

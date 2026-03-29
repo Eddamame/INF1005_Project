@@ -144,7 +144,7 @@ $thresholdPct = round((defined('AUTO_APPROVE_CONFIDENCE_THRESHOLD') ? AUTO_APPRO
                         <?php endif; ?>
                     </div>
                     <div class="d-flex gap-2">
-                        <?php if ($c['status'] === 'draft'): ?>
+                        <?php if (in_array($c['status'], ['draft', 'scanning'])): ?>
                             <a href="<?= base_path() ?>/dashboard/claims/new-claim.php?continue=<?= (int)$c['id'] ?>"
                                class="btn btn-sm btn-success">
                                 Continue <i class="bi bi-arrow-right ms-1"></i>
