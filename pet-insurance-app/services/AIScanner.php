@@ -256,6 +256,10 @@ class AIScanner
             }
         }
 
+        // Merge split line items: Document AI sometimes returns description and amount
+        // as separate line_item entities instead of grouped under one entity.
+        $data['line_items'] = $this->mergeLineItems($data['line_items']);
+
         // Fallback: extract clinic_code via regex from OCR text
         if ($data['clinic_code'] === null) {
             $data['clinic_code'] = $this->extractClinicCodeFromText($rawEntities);
@@ -276,6 +280,46 @@ class AIScanner
         }
         $cleaned = preg_replace('/[^0-9.]/', '', $entity['value'] ?? '');
         return $cleaned !== '' ? (float) $cleaned : null;
+    }
+
+    private function mergeLineItems(array $items): array
+    {
+        $merged = [];
+        $i = 0;
+        while ($i < count($items)) {
+            $current = $items[$i];
+            $next    = $items[$i + 1] ?? null;
+
+            $hasDesc   = $current['description'] !== null;
+            $hasAmount = $current['amount'] !== null || $current['unit_price'] !== null;
+
+            // Current has amount but no description, next has description but no amount — merge
+            if (!$hasDesc && $hasAmount && $next !== null
+                && $next['description'] !== null
+                && $next['amount'] === null && $next['unit_price'] === null
+            ) {
+                $current['description'] = $next['description'];
+                $i += 2;
+                $merged[] = $current;
+                continue;
+            }
+
+            // Current has description but no amount, next has amount but no description — merge
+            if ($hasDesc && !$hasAmount && $next !== null
+                && $next['description'] === null
+                && ($next['amount'] !== null || $next['unit_price'] !== null)
+            ) {
+                $current['amount']     = $next['amount'];
+                $current['unit_price'] = $next['unit_price'];
+                $i += 2;
+                $merged[] = $current;
+                continue;
+            }
+
+            $merged[] = $current;
+            $i++;
+        }
+        return $merged;
     }
 
     private function extractClinicCodeFromText(array $entities): ?string

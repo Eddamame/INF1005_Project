@@ -35,7 +35,6 @@ class ClinicVerifier
         try {
             $clinic = $this->findClinic($parsedData);
             $verified = $clinic !== null && (int) ($clinic['is_verified'] ?? 0) === 1;
-            error_log('ClinicVerifier: verified=' . ($verified ? 'true' : 'false') . ' quoteId=' . $quoteId);
 
             $stmt = $this->db->prepare('UPDATE quotes SET clinic_verified = :flag WHERE id = :id');
             $stmt->execute([
@@ -90,8 +89,6 @@ class ClinicVerifier
                 return $row;
             }
         }
-        error_log('ClinicVerifier: code=' . $code . ' name=' . $name);
-
         // 2. Fuzzy name match — check both directions (DB name contains extracted, or extracted contains DB name)
         if ($name !== '') {
             $stmt = $this->db->prepare('
@@ -104,7 +101,6 @@ class ClinicVerifier
             ');
             $stmt->execute([':name' => '%' . $name . '%', ':name2' => $name]);
             $row = $stmt->fetch();
-            error_log('ClinicVerifier: row=' . json_encode($row));
             if ($row) {
                 return $row;
             }
