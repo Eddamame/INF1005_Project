@@ -60,7 +60,9 @@ if (!$claimId) {
             SELECT p.id AS pet_id, p.name AS pet_name, p.species,
                    s.id AS subscription_id, ip.name AS plan_name
             FROM pets p
-            JOIN subscriptions s ON s.pet_id = p.id AND s.user_id = p.user_id AND s.status = :status
+            JOIN subscriptions s ON s.pet_id = p.id AND s.user_id = p.user_id
+                AND s.status = :status
+                AND (s.end_date IS NULL OR s.end_date >= CURDATE())
             JOIN insurance_plans ip ON ip.id = s.plan_id
             WHERE p.user_id = :uid
             ORDER BY p.name ASC

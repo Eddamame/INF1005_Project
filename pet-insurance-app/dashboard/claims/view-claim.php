@@ -152,6 +152,15 @@ function claimStatusBadge(string $status): string {
         <div class="alert alert-danger"><?= esc($flashError) ?></div>
     <?php endif; ?>
 
+    <!-- Payment pending notice -->
+    <?php if ($claim['status'] === 'approved'): ?>
+        <div class="alert alert-warning mb-4">
+            <i class="bi bi-clock me-2"></i>
+            <strong>Your claim has been approved.</strong>
+            Payment is currently being processed and should be completed within <strong>30 days</strong>.
+        </div>
+    <?php endif; ?>
+
     <!-- Flagged/Suspended banner -->
     <?php if (in_array($claim['status'], ['flagged', 'suspended'])): ?>
         <div class="alert <?= $claim['status'] === 'flagged' ? 'alert-warning' : 'alert-dark text-white' ?> mb-4">

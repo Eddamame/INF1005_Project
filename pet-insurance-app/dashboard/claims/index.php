@@ -116,6 +116,11 @@ $thresholdPct = round((defined('AUTO_APPROVE_CONFIDENCE_THRESHOLD') ? AUTO_APPRO
                         <div class="d-flex align-items-center gap-2 mb-1">
                             <code class="fw-bold"><?= esc($c['reference_id']) ?></code>
                             <?= claimStatusBadge($c['status']) ?>
+                            <?php if ($c['status'] === 'approved'): ?>
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-clock me-1"></i>Payment Pending
+                                </span>
+                            <?php endif; ?>
                             <?php if ($c['latest_confidence'] !== null): ?>
                                 <?php
                                 $pct = round((float)$c['latest_confidence'] * 100, 1);
