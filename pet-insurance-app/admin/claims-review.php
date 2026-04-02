@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ── Filter & pagination ──────────────────────────────────────
 $statusFilter  = inputString('status', 'GET');
-$validStatuses = ['approved', 'rejected', 'flagged', 'suspended', 'draft', 'scanning', 'scanned', 'quoted'];
+$validStatuses = ['approved', 'rejected', 'flagged', 'suspended', 'draft', 'scanning', 'scanned', 'quoted', 'pending_review'];
 if ($statusFilter && !in_array($statusFilter, $validStatuses, true)) {
     $statusFilter = null;
 }
@@ -306,6 +306,9 @@ function confidenceBadge(?float $confidence): string {
         </a>
         <a href="?status=scanned&page=1" class="btn btn-sm <?= $statusFilter === 'scanned' ? 'btn-dark' : 'btn-outline-secondary' ?>">Scanned</a>
         <a href="?status=quoted&page=1" class="btn btn-sm <?= $statusFilter === 'quoted' ? 'btn-dark' : 'btn-outline-secondary' ?>">Quoted</a>
+        <a href="?status=pending_review&page=1" class="btn btn-sm <?= $statusFilter === 'pending_review' ? 'btn-dark' : 'btn-outline-secondary' ?>">
+            <i class="bi bi-hourglass-split me-1"></i>Pending Review
+        </a>
     </div>
 
     <p class="text-muted small"><?= number_format($totalClaims) ?> claim(s).</p>

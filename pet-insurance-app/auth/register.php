@@ -5,7 +5,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/csrf.php';
 require_once __DIR__ . '/../includes/sanitize.php';
 require_once __DIR__ . '/middleware.php';
-isLoggedIn();
+redirectIfLoggedIn();
 
 $errors = [];
 $old = [];

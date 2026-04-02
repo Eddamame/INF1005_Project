@@ -19,7 +19,11 @@ function requireLogin(): void {
     }
 }
 
-function isLoggedIn(): void {
+/**
+ * Redirect to the dashboard if the user is already logged in.
+ * Use on login/register pages to prevent authenticated users from seeing them.
+ */
+function redirectIfLoggedIn(): void {
     if (!empty($_SESSION['user_id'])) {
         header('Location: ' . (defined('BASE_PATH') ? BASE_PATH : '') . '/dashboard/my-pets.php');
         exit;
